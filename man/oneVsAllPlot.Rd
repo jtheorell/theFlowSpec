@@ -4,8 +4,8 @@
 \alias{oneVsAllPlot}
 \title{Plotting all variables against a single variable}
 \usage{
-oneVsAllPlot(dataset, yCol, nRows = 10000, saveResult = TRUE,
-  color = "red")
+oneVsAllPlot(dataset, yCol, nRows = 10000, markerName = "default",
+  color = "red", saveResult = TRUE)
 }
 \arguments{
 \item{dataset}{This is the full dataset, either a dataframe or a matrix, that should be plotted. If it has more rows than "nrows", a random subsample (without resampling) will be plotted}
@@ -14,9 +14,11 @@ oneVsAllPlot(dataset, yCol, nRows = 10000, saveResult = TRUE,
 
 \item{nRows}{The number of rows that will be plotted. The fewer, the faster, but the resolution also decreases, naturally. Default is 10000}
 
-\item{saveResult}{If you do not want to save the results, and view them directly on the screen instead, you set this to false.}
+\item{markerName}{If a specific name for the parameter in the graph name is wanted, it should be added here. Default is name(yCol)_vs_all_others}
 
 \item{color}{The color for the density peaks in the plots.}
+
+\item{saveResult}{If you do not want to save the results, and view them directly on the screen instead, you set this to false.}
 }
 \value{
 A graph with one sub-graph for each variable that the y-variable should be plotted against.

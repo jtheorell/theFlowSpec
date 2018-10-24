@@ -21,24 +21,22 @@ readFlowSetDf <- function(path=".", id, group, stim){
   nameVector <- names(pData(phenoData(flowSetRaw))$name)
 
   if(missing(id) && missing(group) && missing(stim)){
-    flowSetExprs$names <- retrieveFlowSetNames(nameVector=nameVector, specFlowSet=flowSetRaw, gsubpattern="")
+    flowSetExprs$names <- unlist(retrieveFlowSetNames(nameVector=nameVector, specFlowSet=flowSetRaw, gsubpattern=""))
   }
   if(missing(id)==FALSE){
-    donorIds <- retrieveFlowSetNames(nameVector=nameVector, specFlowSet=flowSetRaw, gsubpattern=id)
-    flowSetExprs$id <- donorIds
+    flowSetExprs$id <- unlist(retrieveFlowSetNames(nameVector=nameVector, specFlowSet=flowSetRaw, gsubpattern=id))
   }
   if(missing(group)==FALSE){
-    groupIds <- retrieveFlowSetNames(nameVector=nameVector, specFlowSet=flowSetRaw, gsubpattern=group)
-    flowSetExprs$group <- groupIds
+    flowSetExprs$group <- unlist(retrieveFlowSetNames(nameVector=nameVector, specFlowSet=flowSetRaw, gsubpattern=group))
+
   }
   if(missing(group)==FALSE){
-    groupIds <- retrieveFlowSetNames(nameVector=nameVector, specFlowSet=flowSetRaw, gsubpattern=group)
-    flowSetExprs$group <- groupIds
+    flowSetExprs$group <- unlist(retrieveFlowSetNames(nameVector=nameVector, specFlowSet=flowSetRaw, gsubpattern=group))
+
   }
 
   dateVector <- as.vector(fsApply(flowSetRaw, function(x) x@description$`$DATE`))
-  acqDate <- retrieveFlowSetNames(nameVector=dateVector, specFlowSet=flowSetRaw, gsubpattern="")
-  flowSetExprs$acqDate <- acqDate
+  flowSetExprs$acqDate  <- unlist(retrieveFlowSetNames(nameVector=dateVector, specFlowSet=flowSetRaw, gsubpattern=""))
 
   return(flowSetExprs)
   setwd(oldWd)

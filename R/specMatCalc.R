@@ -33,39 +33,48 @@
 #'
 #' Ids <- c(fluorochromes, "Autofluorescence")
 #' PosSamples <- c(fluorochromes, "PBMC_unstained")
-#' NegSamples <- c(rep("Unstained", times=length(fluorochromes)), "0")
+#' NegSamples <- c(rep("Unstained", times=length(fluorochromes)), 0)
 #' compScheme <- cbind(Ids, PosSamples, NegSamples)
 #'
 #' #Now, select only the fluorescence channels, marked by one of the lasers
 #' compControls <- compCtrls[,grepl("[VBRY]", colnames(compCtrls))]
 #' ids <- compCtrls$id
 #'
+#' #And run the function
+#' spectralMatrix <- specMatCalc(compControls, compScheme, ids)
 #'
 #' @export specMatCalc
 specMatCalc <- function(compControls, compScheme, ids){
 
+  #Now, to save some computational time, the negative samples, that are reused, are first calculated
+  negSamples <- unique(compScheme[,3])
 
+  negPeaksList=list()
+  for(i in 1:length(negSamples)){
+    if(negSamples[i]=="0"){
+      negPeaksList[[i]] <- rep(0, times=ncol(compControls))
+    } else {
+      negSample <-  compControls[ids==negSamples[i],]
+      negPeaksList[[i]] <- specMatCalcCoCoFunction(negSample)
+    }
+
+  }
   specMat <- list()
   for(i in 1:nrow(compScheme)){
 
-    posSample <- compControls[ids==compScheme[2,i],]
-    negSample <- compControls[ids==compScheme[3,i],]
 
+    posSample <- compControls[ids==compScheme[i,2],]
+    posPeaks <- specMatCalcCoCoFunction(posSample)
+    negPeaks <- negPeaksList[[which(negSamples==compScheme[i,3])]]
+
+    peaks <- posPeaks-negPeaks
+    peaksFraction <- peaks/max(peaks)
+    specMat[[i]] <-peaksFraction
 
   }
 
+  specDf <- do.call("rbind", specMat)
 
-  if(center=="peak"){
-    #The peak of the data is defined
-    if(length(x)<500){
-      nBreaks <- 10
-    } else {
-      nBreaks <- length(x)/50
-    }
-    histdata <- hist(responseVector, breaks=nBreaks, plot=FALSE)
-    zeroPosition <- histdata$mids[match(max(histdata$counts), histdata$counts)]
-
-    #And the position for this this peak is subtracted from all points
-    responseVector <- responseVector-zeroPosition
-  }
+  row.names(specDf) <- compScheme[,1]
+  return(specDf)
 }

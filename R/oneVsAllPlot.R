@@ -6,14 +6,16 @@
 #' @param yCol Here, the variable to be plotted against all the others is selected. It can be either a number or the column name of interest.
 #' @param nRows The number of rows that will be plotted. The fewer, the faster, but the resolution also decreases, naturally. Default is 10000
 #' @param color The color for the density peaks in the plots.
+#' @param markerName If a specific name for the parameter in the graph name is wanted, it should be added here. Default is name(yCol)_vs_all_others
 #' @param saveResult If you do not want to save the results, and view them directly on the screen instead, you set this to false.
 #' @return A graph with one sub-graph for each variable that the y-variable should be plotted against.
 #'
 #' @export oneVsAllPlot
-oneVsAllPlot <- function(dataset, yCol, nRows=10000, saveResult=TRUE, color="red"){
+oneVsAllPlot <- function(dataset, yCol, nRows=10000, markerName="default", color="red", saveResult=TRUE){
   if(class(dataset)=="matrix"){
     dataset <- as.data.frame(dataset)
   }
+
 
   if(nrow(dataset)>nRows){
     datasetInUse <- dataset[sample(1:nrow(dataset), size=nRows),]
@@ -27,6 +29,11 @@ oneVsAllPlot <- function(dataset, yCol, nRows=10000, saveResult=TRUE, color="red
     yCol <- which(colnames(dataset)==yCol)
   }
 
+  if(markerName=="default"){
+    markerName <- colnames(dataset)[yCol]
+  }
+
+
   #Here, the yCol is separated from the rest of the data
   yColData <- datasetInUse[,yCol]
   nonYColData <- datasetInUse[,-yCol]
@@ -38,7 +45,7 @@ oneVsAllPlot <- function(dataset, yCol, nRows=10000, saveResult=TRUE, color="red
 
 
   if(saveResult==TRUE){
-    png(width=1300, height=1300, paste0(colnames(datasetInUse)[yCol], "vs_all_others.png"))
+    png(width=1300, height=1300, paste0(markerName, "_vs_all_others.png"))
   }
   par(mfrow=c(6,6), mai=c(0,0,0,0), pty="m", mar=c(3, 0, 0, 0), oma = c(6, 4, 4, 6), cex=1.2, mgp=c(1, 0.5, 0))
   for(i in 1:ncol(nonYColData)){

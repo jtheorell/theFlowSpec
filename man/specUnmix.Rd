@@ -13,6 +13,17 @@ specUnmix(rawData, specMat)
 }
 \value{
 The unmixed data. It will be returned in the format it was imported as.
+
+#Load some uncompensated data
+data(fullPanel)
+
+#Select the rows that should be compensated
+fluoExprs <- fullPanel[,grepl("[VBRY]", colnames(fullPanel))]
+#Load the spectral unmixing matrix generated with controls from the same experiment. These can be generated using the specMatCalc function.
+data(specMat)
+
+#And now, just run the function!
+dataComp <- specUnmix(fluoExprs, specMat)
 }
 \description{
 This function is useful both when setting appropriate gates and when the adjustments of the compensation are done
