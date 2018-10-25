@@ -55,7 +55,7 @@ specMatCalc <- function(compControls, compScheme, ids){
       negPeaksList[[i]] <- rep(0, times=ncol(compControls))
     } else {
       negSample <-  compControls[ids==negSamples[i],]
-      negPeaksList[[i]] <- specMatCalcCoCoFunction(negSample)
+      negPeaksList[[i]] <- apply(negSample, 2, median)
     }
 
   }
@@ -64,7 +64,7 @@ specMatCalc <- function(compControls, compScheme, ids){
 
 
     posSample <- compControls[ids==compScheme[i,2],]
-    posPeaks <- specMatCalcCoCoFunction(posSample)
+    posPeaks <- apply(posSample, 2, median)
     negPeaks <- negPeaksList[[which(negSamples==compScheme[i,3])]]
 
     peaks <- posPeaks-negPeaks

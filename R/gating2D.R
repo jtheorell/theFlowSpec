@@ -31,4 +31,9 @@ gating2D <- function(dataSet, xVar, yVar, gateName="default", color="red", sampl
 
   gatedData <- dataSet[gateSubset,]
 
+  gatedDataPlusRows <- data.frame(gatedData, gateSubset)
+  colnames(gatedDataPlusRows)[ncol(gatedDataPlusRows)] <- paste0("Rows_in_", deparse(substitute(dataSet)))
+
+  return(gatedDataPlusRows)
+
 }

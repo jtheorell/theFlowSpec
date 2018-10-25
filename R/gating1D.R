@@ -1,12 +1,17 @@
+#' importFrom stats density
 #' @export gating1D
 gating1D <- function(dataSet, variable, outputDataset, gateName=variable, color="red", saveResult=TRUE){
-  hist(dataSet[,variable], breaks=200, xlab=variable, main=gateName)
+
+  d <- density(dataSet[,variable])
+  plot(d, main=gateName, xlab=variable)
+  polygon(d, col="grey", border="black")
+
   coordinates <- locator(type="n")
 
   segments(x0=coordinates$x[1], y0=min(coordinates$y), x1=coordinates$x[2], y1=min(coordinates$y), col=color, lwd=3)
 
   if(saveResult==TRUE){
-    dev.copy(png,paste0(gateName, "gate.png"))
+    dev.copy(pdf,paste0(gateName, "_gate.pdf"))
     dev.off()
   }
 
@@ -14,5 +19,9 @@ gating1D <- function(dataSet, variable, outputDataset, gateName=variable, color=
     outputDataset <- dataSet
   }
   gatedData <- outputDataset[dataSet[,variable]>min(coordinates$x) & dataSet[,variable]<max(coordinates$x),]
+
+  gatedDataPlusRows <- data.frame(gatedData, which(dataSet[,variable]>min(coordinates$x) & dataSet[,variable]<max(coordinates$x)))
+  colnames(gatedDataPlusRows)[ncol(gatedDataPlusRows)] <- paste0("Rows_in_", deparse(substitute(dataSet)))
+  return(gatedDataPlusRows)
 
 }
