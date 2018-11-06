@@ -6,10 +6,10 @@ Authors@R: person("Jakob", "Theorell", email = "jakob.theorell@ki.se",
                   role = c("aut", "cre"))
 Author: Jakob Theorell [aut, cre]
 Maintainer: Jakob Theorell <jakob.theorell@ki.se>
-Description: The purpose of this package is to provide an open-source alternative to conventional software, when it comes to spectral decomposition of over-determined flow-cytometry files. Such files most often come from spectral flow cytometers, but can also be generated using normal flow-cytometers if all channels are kept open. In addition to this, a number of simple graphical displays are created, as well as a parallelized version of the flowVS package, speeding up the identification of the optimal arccosinh cofactors. 
+Description: The purpose of this package is to provide an open-source alternative to conventional cytometry analysis software. It was created to deal with the insufficiencies in conventional software when it comes to spectral decomposition of over-determined flow-cytometry files. Such files most often come from spectral flow cytometers, but can also be generated using normal flow-cytometers if all channels are kept open. The software contains everything needed to perform a cytometry analysis: interactive gating tools in one and two dimensions, tools for correction of spectral unmixing and for determination of useful transformation values, based on arcsinh transform. When coupled to euclidMicroClust  and DepecheR, the software suite can handle everything from data pre-filtering to cluster- and variable selection. 
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.1.0
 Depends: R (>= 3.4.0)
-Imports: flowCore (>= 1.46.2)
+Imports: flowCore (>= 1.46.2) 

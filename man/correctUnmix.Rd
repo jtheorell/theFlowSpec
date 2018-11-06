@@ -2,7 +2,7 @@
 % Please edit documentation in R/correctUnmix.R
 \name{correctUnmix}
 \alias{correctUnmix}
-\title{Correct defects in spectral unmixing}
+\title{Correct defects in spectral unmixing by compensation}
 \usage{
 correctUnmix(unmixData, correcMat, transform = TRUE,
   coFactors = rep(1500, ncol(unmixData)))
@@ -17,7 +17,7 @@ correctUnmix(unmixData, correcMat, transform = TRUE,
 \item{coFactors}{Used if transform==TRUE. See \code{\link{transformData}}.}
 }
 \description{
-This function aims at solving the common problem of imperfect unmixing and compensation in flow cytometry
+This function aims at solving the common problem of imperfect unmixing and compensation in flow cytometry using traditional fluorescence compensation.
 }
 \examples{
 #Load some data
@@ -36,9 +36,18 @@ dataUnmixed <- specUnmix(fluoExprs, specMat)
 correcMat <- creEmptyCorrMat(dataUnmixed)
 
 #Now correct the data with this.
-correcData <- correcUnmix(dataUnmixed, correcMat)
+correcData <- correctUnmix(dataUnmixed, correcMat)
 
 #In this first run, no correction will be included, but in later iterations, the correcMat can be changed to include the corrections needed.
+
+#For example, Qdot705 is "overcompensated" to AF700 in the spectral unmixing process. For this reason, a correction is included:
+correcMat["Qdot705","AF700"] <- 0.1
+
+#And now, a new correction is made
+correcData <- correctUnmix(dataUnmixed, correcMat)
+
+#And so on, and so forth.
+
 }
 \seealso{
 \code{\link{creEmptyCorrMat}}, \code{\link{specUnmix}}, \code{\link{transformData}}

@@ -4,16 +4,12 @@
 \alias{readFlowSetDf}
 \title{Import a flow set and convert it to one long dataframe}
 \usage{
-readFlowSetDf(path = ".", id, group, stim)
+readFlowSetDf(path = ".", idInfo)
 }
 \arguments{
 \item{path}{The path to the folder where the .fcs files are stored.}
 
-\item{id}{If a column specifying which of the original donors that each observation comes from should be included, the gsub-pattern should be specified here.}
-
-\item{group}{See "ids"}
-
-\item{stim}{See "ids"}
+\item{idInfo}{A list of any number of characteristics that can be derived from the file names. For each entry, a gsub specification of where to find the information in the file name should be added, such as id=""..._|..."".}
 }
 \value{
 A long data frame with one column per PMT/APD, one for the acquisition date and one colum for each specified slot above. If the same donor id occurs for two different stimuli, another column creating unique ids is also made. If no gsub-pattern is provided, the full file name will be used to separate the observations.

@@ -5,7 +5,7 @@
 \title{importFrom stats density}
 \usage{
 gating1D(dataSet, variable, outputDataset, gateName = variable,
-  color = "red", saveResult = TRUE)
+  color = "red", saveResult = TRUE, makeDir = TRUE)
 }
 \description{
 importFrom stats density

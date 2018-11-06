@@ -13,7 +13,11 @@ specUnmix(rawData, specMat)
 }
 \value{
 The unmixed data. It will be returned in the format it was imported as.
-
+}
+\description{
+This function is useful both when setting appropriate gates and when the adjustments of the compensation are done
+}
+\examples{
 #Load some uncompensated data
 data(fullPanel)
 
@@ -24,7 +28,5 @@ data(specMat)
 
 #And now, just run the function!
 dataComp <- specUnmix(fluoExprs, specMat)
-}
-\description{
-This function is useful both when setting appropriate gates and when the adjustments of the compensation are done
+
 }

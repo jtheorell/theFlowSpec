@@ -1,6 +1,6 @@
 #' importFrom stats density
 #' @export gating1D
-gating1D <- function(dataSet, variable, outputDataset, gateName=variable, color="red", saveResult=TRUE){
+gating1D <- function(dataSet, variable, outputDataset, gateName=variable, color="red", saveResult=TRUE, makeDir=TRUE){
 
   d <- density(dataSet[,variable])
   plot(d, main=gateName, xlab=variable)
@@ -22,6 +22,13 @@ gating1D <- function(dataSet, variable, outputDataset, gateName=variable, color=
 
   gatedDataPlusRows <- data.frame(gatedData, which(dataSet[,variable]>min(coordinates$x) & dataSet[,variable]<max(coordinates$x)))
   colnames(gatedDataPlusRows)[ncol(gatedDataPlusRows)] <- paste0("Rows_in_", deparse(substitute(dataSet)))
+
+  if(makeDir==TRUE){
+    newDir <- paste0("./", gateName)
+    dir.create(newDir)
+    setwd(newDir)
+  }
+
   return(gatedDataPlusRows)
 
 }

@@ -48,6 +48,25 @@ specMatCalc <- function(compControls, compScheme, ids){
 
   #Now, to save some computational time, the negative samples, that are reused, are first calculated
   negSamples <- unique(compScheme[,3])
+  #First, the full dataset is scaled using robust variance scaling
+  #compControlsScaled <- dScale(compControls,center=FALSE,robustVarScale = FALSE)
+
+  #First, a dummy variable is constructed with the same length as the positive and negative samples for each case
+  #dummy <- lapply(c(1:nrow(compScheme)), function(i) c(rep(1, length(ids[ids==compScheme[i,2]])), if(compScheme[i,3]==0){0} else {rep(0, length(ids[ids==compScheme[i,3]]))}))
+
+  #compControlList <- lapply(c(1:nrow(compScheme)), function(i) rbind(compControlsScaled[ids==compScheme[i,2],], if(compScheme[i,3]==0){rep(0, ncol(compControls))} else{compControlsScaled[ids==compScheme[i,3],]}))
+
+  #Now, this is used to solve a least squares problem
+  #solution <- lapply(c(1:nrow(compScheme)), function(i) pls(compControlList[[i]], dummy[[i]], ncomp=1)$loadings$X)
+
+  #solution <- lapply(c(1:nrow(compScheme)), function(i) lsfit(compControlList[[i]], dummy[[i]], intercept=FALSE)$coef)
+
+
+  #solutionFrac <-  lapply(solution, function(x) x/max(x))
+  #solutionMat <- do.call("cbind", solutionFrac)
+
+  #colnames(solutionMat) <- compScheme[,1]
+
 
   negPeaksList=list()
   for(i in 1:length(negSamples)){
