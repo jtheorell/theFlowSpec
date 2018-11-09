@@ -1,4 +1,4 @@
-Package: flowJake
+Package: theFlow
 Version: 0.0.1
 Date: 2018-10-10
 Title: Tools for spectral unmixing of overdetermined flow-cytometry files. And other nice things.
