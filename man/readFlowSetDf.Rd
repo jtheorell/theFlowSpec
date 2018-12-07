@@ -4,15 +4,15 @@
 \alias{readFlowSetDf}
 \title{Import a flow set and convert it to one long dataframe}
 \usage{
-readFlowSetDf(path = ".", idInfo)
+readFlowSetDf(path = ".", idInfo, nRows = "all")
 }
 \arguments{
-\item{path}{The path to the folder where the .fcs files are stored.}
+\item{path}{The path to the folder where the .fcs or .csv files are stored.}
 
 \item{idInfo}{A list of any number of characteristics that can be derived from the file names. For each entry, a gsub specification of where to find the information in the file name should be added, such as id=""..._|..."".}
 }
 \value{
-A long data frame with one column per PMT/APD, one for the acquisition date and one colum for each specified slot above. If the same donor id occurs for two different stimuli, another column creating unique ids is also made. If no gsub-pattern is provided, the full file name will be used to separate the observations.
+A long data frame with one column per PMT/APD (or fluorochrome, depending on the state of the imported files), one for the acquisition date (for fcs files) and one colum for each specified slot above. If no gsub-pattern is provided, the full file name will be used to separate the observations.
 }
 \description{
 This function is useful to manipulate data within R, as, in most instances, the majority of the meta information stored in the fcs file is not of general use for day.to.day analyses.

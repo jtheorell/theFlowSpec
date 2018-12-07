@@ -1,4 +1,4 @@
-Package: theFlow
+Package: theFlowSpec
 Version: 0.0.1
 Date: 2018-10-10
 Title: Tools for spectral unmixing of overdetermined flow-cytometry files. And other nice things.
@@ -10,6 +10,6 @@ Description: The purpose of this package is to provide an open-source alternativ
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 6.1.0
+RoxygenNote: 6.1.1
 Depends: R (>= 3.4.0)
 Imports: flowCore (>= 1.46.2) 

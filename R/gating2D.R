@@ -20,7 +20,7 @@ gating2D <- function(dataSet, xVar, yVar, gate=TRUE, gateName="default", color="
   }
 
 
-  flowJake:::oneVsAllPlotCoFunction(xVar=xDataSample, yVar=yDataSample, color=color, dotSize=dotSize, xlab=xVar, ylab=yVar)
+  oneVsAllPlotCoFunction(xVar=xDataSample, yVar=yDataSample, color=color, dotSize=dotSize, xlab=xVar, ylab=yVar)
 
     coordinates <- locator(type="n")
     polygon(x=coordinates$x, y=coordinates$y, col="#0000FF55", border=color, lwd=3)
