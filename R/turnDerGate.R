@@ -12,6 +12,7 @@
 #' @param lowPeak Logical, defining if the low or the high peak in the data should be the basis for the gates. Currently, only uni- or bimodal distributions are correctly interpreted.
 #' @param abovePeak Logical, defining at which side of the peak that the gate should be created.
 #' @param adjust A command changing the bandwidth of the density function, both for calculation of the peaks and gate positions and for visualization.
+#' @param nDens The number of bins that are used to calculate the density. "default" means the lowest of 512 and the number of events divided by 5. A specific number can also be specified.
 #' @param volRatio Defining how small the smaller of the two peaks can be to be considered a true peak. It is a fraction of the volume of the larger peak. Default is 0.05, i.e. if the volume of the second peak is 5 percent or larger than the volume of the first peak, it is considered a peak.
 #' @param gateWeight This command defines how similar the selection step is to normal gating. A high value will render the overlap between the populations very small, whereas a low value will have the opposite effect. 2, i.e. a weight of 2x that of any of the other variables, is standard.
 #' @param createDir If a new directory should be created.
@@ -29,7 +30,7 @@
 #' testGates <- turnDerGate(testDataList, 3, c(2:15), adjust=2)
 #'
 #' @export turnDerGate
-turnDerGate <- function(inDatDonList, gateMarker, euclidMarkers, lowPeak=TRUE, abovePeak=TRUE, adjust=2, volRatio=0.05, gateWeight=2, createDir=TRUE){
+turnDerGate <- function(inDatDonList, gateMarker, euclidMarkers, lowPeak=TRUE, abovePeak=TRUE, adjust=2, nDens="default", volRatio=0.05, gateWeight=2, createDir=TRUE){
   if(any(is(gateMarker)=="numeric")){
     gateMarker <- colnames(inDatDonList[[1]])[gateMarker]
   }
@@ -43,7 +44,12 @@ turnDerGate <- function(inDatDonList, gateMarker, euclidMarkers, lowPeak=TRUE, a
   resultList <- list()
   for(i in 1:length(inDatDonList)){
     markerData <- inDatDonList[[i]][,gateMarker]
-    Da = density(markerData, adjust=adjust)
+    if(nDens=="default"){
+      n <- min(2^9, length(markerData)/5)
+    } else {
+      n <- nDens
+    }
+    Da = density(markerData, adjust=adjust, n=n)
     DeltaY = diff(Da$y)
     Turns = which(DeltaY[-1] * DeltaY[-length(DeltaY)] < 0) + 1
     #Identify the two highest turnpoints
@@ -128,7 +134,7 @@ turnDerGate <- function(inDatDonList, gateMarker, euclidMarkers, lowPeak=TRUE, a
       }
     }
 
-    resultList[[i]] <- turnDerGateCoFunction(euclidFocus=inDatDonList[[i]][,euclidMarkers], gateMarker=gateMarker, gateVal=gateVal, gateWeight=gateWeight, graphName=graphName, adjust=adjust)
+    resultList[[i]] <- turnDerGateCoFunction(euclidFocus=inDatDonList[[i]][,euclidMarkers], gateMarker=gateMarker, gateVal=gateVal, gateWeight=gateWeight, graphName=graphName, adjust=adjust, n=n)
     print(paste0("Done with individual ", names(inDatDonList)[i]))
   }
   if(createDir==TRUE){

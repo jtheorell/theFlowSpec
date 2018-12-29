@@ -5,8 +5,8 @@
 \title{Function used to generate automated gates on large sets of samples}
 \usage{
 turnDerGate(inDatDonList, gateMarker, euclidMarkers, lowPeak = TRUE,
-  abovePeak = TRUE, adjust = 2, volRatio = 0.05, gateWeight = 2,
-  createDir = TRUE)
+  abovePeak = TRUE, adjust = 2, nDens = "default", volRatio = 0.05,
+  gateWeight = 2, createDir = TRUE)
 }
 \arguments{
 \item{inDatDonList}{This is the list of donor dataframes that should be gated. Here, all variables should be included, and the specific gating variables are specified below.}
@@ -20,6 +20,8 @@ turnDerGate(inDatDonList, gateMarker, euclidMarkers, lowPeak = TRUE,
 \item{abovePeak}{Logical, defining at which side of the peak that the gate should be created.}
 
 \item{adjust}{A command changing the bandwidth of the density function, both for calculation of the peaks and gate positions and for visualization.}
+
+\item{nDens}{The number of bins that are used to calculate the density. "default" means the lowest of 512 and the number of events divided by 5. A specific number can also be specified.}
 
 \item{volRatio}{Defining how small the smaller of the two peaks can be to be considered a true peak. It is a fraction of the volume of the larger peak. Default is 0.05, i.e. if the volume of the second peak is 5 percent or larger than the volume of the first peak, it is considered a peak.}
 

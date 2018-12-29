@@ -1,7 +1,7 @@
 #' @importFrom DepecheR dScale
 #' @importFrom FNN knnx.index
 #' @export turnDerGateCoFunction
-turnDerGateCoFunction <- function(euclidFocus, gateMarker, gateVal, gateWeight, graphName, adjust){
+turnDerGateCoFunction <- function(euclidFocus, gateMarker, gateVal, gateWeight, graphName, adjust, n){
   if(nrow(euclidFocus[euclidFocus[,gateMarker]>=gateVal,])>100){
     euclidScaled <- dScale(euclidFocus)
     euclidScaled[,gateMarker] <- euclidScaled[,gateMarker]*gateWeight
@@ -21,7 +21,7 @@ turnDerGateCoFunction <- function(euclidFocus, gateMarker, gateVal, gateWeight, 
     neighbors[euclidFocus[,gateMarker]>=gateVal] <- 2
   }
 
-  negPop <- density(euclidFocus[neighbors==1, gateMarker],from=min(euclidFocus[,gateMarker]), to=max(euclidFocus[,gateMarker]), adjust=adjust)
+  negPop <- density(euclidFocus[neighbors==1, gateMarker],from=min(euclidFocus[,gateMarker]), to=max(euclidFocus[,gateMarker]), adjust=adjust, n=n)
   #Here, all points outside the data range are excluded
   minNeg <- min(euclidFocus[neighbors==1, gateMarker])
   maxNeg <- max(euclidFocus[neighbors==1, gateMarker])
@@ -36,7 +36,7 @@ turnDerGateCoFunction <- function(euclidFocus, gateMarker, gateVal, gateWeight, 
 
   #(negYFull/max(negYFull))*length(euclidFocus[euclidFocus$GateVal=="neg", gateMarker])
 
-  posPop <- density(euclidFocus[neighbors==2, gateMarker],from=min(euclidFocus[,gateMarker]), to=max(euclidFocus[,gateMarker]), adjust=adjust)
+  posPop <- density(euclidFocus[neighbors==2, gateMarker],from=min(euclidFocus[,gateMarker]), to=max(euclidFocus[,gateMarker]), adjust=adjust, n=n)
   #Here, all points outside the data range are excluded
   minpos <- min(euclidFocus[neighbors==2, gateMarker])
   maxpos <- max(euclidFocus[neighbors==2, gateMarker])
@@ -50,7 +50,7 @@ turnDerGateCoFunction <- function(euclidFocus, gateMarker, gateVal, gateWeight, 
 
   #(posYFull/max(posYFull))*length(euclidFocus[euclidFocus$GateVal=="pos", gateMarker])
 
-  fullPop <- density(euclidFocus[, gateMarker],from=min(euclidFocus[,gateMarker]), to=max(euclidFocus[,gateMarker]), adjust=adjust)
+  fullPop <- density(euclidFocus[, gateMarker],from=min(euclidFocus[,gateMarker]), to=max(euclidFocus[,gateMarker]), adjust=adjust, n=n)
   #Here, all points outside the data range are excluded
   minFull <- min(euclidFocus[, gateMarker])
   maxFull <- max(euclidFocus[, gateMarker])
