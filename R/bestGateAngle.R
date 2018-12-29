@@ -1,9 +1,9 @@
 #' @export bestGateAngle
-bestGateAngle <- function(focusVar, Var2, focusName=deparse(substitute(focusVar)), name2=deparse(substitute(focusVar))){
+bestGateAngle <- function(focusVar, Var2, focusName=deparse(substitute(focusVar)), name2=deparse(substitute(focusVar)), minFocusVarContrib=0.5){
 
   testData <- cbind(focusVar, Var2)
 
-  focusVarVal <- c(seq(-1, -0.5, length.out=51), seq(0.5, 1, length.out=51))
+  focusVarVal <- c(seq(-1, -minFocusVarContrib, length.out=51), seq(minFocusVarContrib, 1, length.out=51))
 
   var2Val <- 1-abs(focusVarVal)
 
