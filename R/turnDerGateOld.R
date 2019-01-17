@@ -30,7 +30,7 @@
 #' testGates <- turnDerGate(testDataList, 3, c(2:15), adjust=2)
 #'
 #' @export turnDerGate
-turnDerGate <- function(inDatDonList, gateMarker, euclidMarkers, lowPeak=TRUE, abovePeak=TRUE, adjust=2, nDens="default", volRatio=0.05, gateWeight=2, createDir=TRUE){
+turnDerGateOld <- function(inDatDonList, gateMarker, euclidMarkers, lowPeak=TRUE, abovePeak=TRUE, adjust=2, nDens="default", volRatio=0.05, gateWeight=2, createDir=TRUE){
   if(any(is(gateMarker)=="numeric")){
     gateMarker <- colnames(inDatDonList[[1]])[gateMarker]
   }
@@ -45,7 +45,7 @@ turnDerGate <- function(inDatDonList, gateMarker, euclidMarkers, lowPeak=TRUE, a
   for(i in 1:length(inDatDonList)){
     markerData <- inDatDonList[[i]][,gateMarker]
     if(nDens=="default"){
-      n <- min(64, length(markerData)/5)
+      n <- min(2^9, length(markerData)/5)
     } else {
       n <- nDens
     }
@@ -68,13 +68,13 @@ turnDerGate <- function(inDatDonList, gateMarker, euclidMarkers, lowPeak=TRUE, a
         stopHigh <- Da$x[minTurn]
         startLow <- Da$x[minTurn]
         stopLow <- Da$x[length(Da$x)]
-        topTurns <- c(topTwo[1], topTwo[2])
+        topTurn <- topTwo[1]
       } else {
         startLow <- Da$x[1]
         stopLow <- Da$x[minTurn]
         startHigh <- Da$x[minTurn]
         stopHigh <- Da$x[length(Da$x)]
-        topTurns <- c(topTwo[2], topTwo[1])
+        topTurn <- topTwo[2]
       }
 
       volHigh <- length(markerData[which(markerData>startHigh & markerData<stopHigh)])
@@ -86,12 +86,12 @@ turnDerGate <- function(inDatDonList, gateMarker, euclidMarkers, lowPeak=TRUE, a
         print("Two peaks are detected.")
         if(lowPeak==TRUE && abovePeak==TRUE){
           print("As the gate should be placed between the peaks, the turn point closest to the lower peak was chosen")
-          gateVal <- Da$x[Turns[which(Turns==topTurns[1])+1]]
+          gateVal <- Da$x[Turns[which(Turns==topTurn)+1]]
           graphName <- paste0("Donor_", names(inDatDonList)[i], "_", gateMarker, "_turnGate.pdf")
 
         } else if(lowPeak==FALSE && abovePeak==FALSE){
           print("As the gate should be placed between the peaks, the turn point closest to the higher peak was chosen")
-          gateVal <- Da$x[Turns[which(Turns==topTurns[2])-1]]
+          gateVal <- Da$x[Turns[which(Turns==topTurn)-1]]
           graphName <- paste0("Donor_", names(inDatDonList)[i], "_", gateMarker, "_turnGate.pdf")
 
         } else {
@@ -109,38 +109,29 @@ turnDerGate <- function(inDatDonList, gateMarker, euclidMarkers, lowPeak=TRUE, a
       twoPeaks <- FALSE
     }
     if(twoPeaks==FALSE){
-      #Only one peak was detected with the current threshold on peak size, and thus, a gate based on curve derivatives is created instead
-
       graphName <- paste0("Donor_", names(inDatDonList)[i], "_", gateMarker, "_derGate.pdf")
 
+      #Only one peak was detected with the current threshold on peak size, and thus, a gate based on curve derivatives is created instead
+      DeltaY2 = smooth(diff(diff(Da$y)))
+      #DeltaY3 = smooth(diff(diff(diff(Da$y))))
+      #Find the first place where a value is lower than the previous after the peak.
       if(abovePeak==TRUE){
-        peakRange <- c(peakCenter:length(Da$y))
-        DeltaY2 = diff(diff(Da$y[peakRange]))
-        subDeltaY2 <- unlist(sapply(1:length(DeltaY2)-1, function(x) DeltaY2[x]*DeltaY2[x+1]))
-        #Here, the position after the first passing of zero for the second derivative is chosen, i e the first deflection point in the firt derivative after the peak.
-        delta2Val <- (which(subDeltaY2<0)+ (peakCenter+1))[1]
-        zoomRange <- c(delta2Val:length(Da$y))
-        DeltaY4 = diff(diff(diff(diff(Da$y[zoomRange]))))
-        subDeltaY4 <- unlist(sapply(1:length(DeltaY4)-1, function(x) DeltaY4[x]*DeltaY4[x+1]))
-        deltaPosTurns <- which(subDeltaY4<0)+1
-        Turns4 <- deltaPosTurns + delta2Val
-        gateInterval <- data.frame("x"=c(Da$x[Turns4[1]], Da$x[Turns4[1]-1]), "y"=c(DeltaY4[deltaPosTurns[1]], DeltaY4[deltaPosTurns[1]-1]))
-        gateVal <- lm(x~y, gateInterval)$coefficients[1]
-
+        peakRange <- c(peakCenter:length(DeltaY2))
+        peakRangeSub <- unlist(sapply(1:(length(peakRange)-1), function(x) DeltaY2[x]*DeltaY2[x+1]))
+        startPoint <- which(peakRangeSub<0)[1]+(peakCenter+1)
+        peak2Side <- DeltaY3[startPoint:length(DeltaY3)]
+        peak2SideSub <- unlist(sapply(1:length(peak2Side)-1, function(x) peak2Side[x]*peak2Side[x+1]))
+        gateVal <- Da$x[which(peak2SideSub<0)[1]+(startPoint+1)]
       } else {
         peakRange <- c(1:peakCenter)
-        DeltaY2 = diff(diff(Da$y[peakRange]))
-        subDeltaY2 <- unlist(sapply(1:length(DeltaY2)-1, function(x) DeltaY2[x]*DeltaY2[x+1]))
-        #Here, the position after the first passing of zero for the second derivative is chosen, i e the first deflection point in the firt derivative after the peak.
-        allDelta2Vals <- which(subDeltaY2<0)
-        delta2Val <- allDelta2Vals[length(allDelta2Vals)]
-        zoomRange <- c(1:delta2Val)
-        DeltaY4 = diff(diff(diff(diff(Da$y[zoomRange]))))
-        subDeltaY4 <- unlist(sapply(1:length(DeltaY4)-1, function(x) DeltaY4[x]*DeltaY4[x+1]))
-        Turns4 <- which(subDeltaY4<0)+1
-        TurnVal <- Turns4[length(Turns4)]
-        gateInterval <- data.frame("x"=c(Da$x[TurnVal], Da$x[TurnVal-1]), "y"=c(DeltaY4[TurnVal], DeltaY4[TurnVal-1]))
-        gateVal <- lm(x~y, gateInterval)$coefficients[1]
+        allInteresting <- peakRange[which(Da$y[1:peakCenter]<0.95*Da$y[peakCenter])]
+        stopPoint <- allInteresting[length(allInteresting)]
+        peakSide <- DeltaY2[1:stopPoint]
+        peakSideSub <- unlist(sapply(1:length(peakSide)-1, function(x) peakSide[x]-peakSide[x+1]))
+        peak2<- which(peakSideSub>0)[1]
+        peak2Side <- DeltaY3[1:peak2]
+        peak2SideSub <- unlist(sapply(1:length(peak2Side)-1, function(x) peak2Side[x]-peak2Side[x+1]))
+        gateVal <- Da$x[which(peak2SideSub<0)[1]]
 
       }
     }

@@ -2,15 +2,22 @@
 #' @importFrom FNN knnx.index
 #' @export turnDerGateCoFunction
 turnDerGateCoFunction <- function(euclidFocus, gateMarker, gateVal, gateWeight, graphName, adjust, n){
-  if(nrow(euclidFocus[euclidFocus[,gateMarker]>=gateVal,])>100){
-    euclidScaled <- dScale(euclidFocus)
+  #First, the area closest to the gate is exluded from the populations. This is donw, by excluding not half of the events, but rather half of the x-axis area that the population takes up.
+  allNeg <- euclidFocus[euclidFocus[,gateMarker]<gateVal,]
+  allPos <- euclidFocus[euclidFocus[,gateMarker]>=gateVal,]
+  clearNegRange <- quantile(allNeg[,gateMarker], c(0.01, 0.99))
+  clearPosRange <- quantile(allPos[,gateMarker], c(0.01, 0.99))
+  clearNegBorder <- clearNegRange[1]+((clearNegRange[2]-clearNegRange[1])/4)*3
+  clearPosBorder <- clearPosRange[1]+((clearPosRange[2]-clearPosRange[1])/4)
+  euclidFocus$GateResult <- "Unclear"
+  euclidFocus$GateResult[euclidFocus[,gateMarker]<clearNegBorder] <- "neg"
+  euclidFocus$GateResult[euclidFocus[,gateMarker]>clearPosBorder] <- "pos"
+
+  if(nrow(euclidFocus[euclidFocus$GateResult=="neg",])>50 && nrow(euclidFocus[euclidFocus$GateResult=="pos",])>50){
+    euclidScaled <- dScale(euclidFocus[-ncol(euclidFocus)])
     euclidScaled[,gateMarker] <- euclidScaled[,gateMarker]*gateWeight
-    euclidFocus$GateVal <- "neg"
-    euclidFocus$GateVal[euclidFocus[,gateMarker]>=gateVal] <- "pos"
-    negMedian <- median(euclidScaled[euclidFocus$GateVal=="neg",gateMarker])
-    posMedian <- median(euclidScaled[euclidFocus$GateVal=="pos",gateMarker])
-    negPop <- euclidScaled[euclidScaled[gateMarker]<negMedian,]
-    posPop <- euclidScaled[euclidScaled[gateMarker]>posMedian,]
+    negPop <- euclidScaled[euclidFocus$GateResult=="neg",-ncol(euclidFocus)]
+    posPop <- euclidScaled[euclidFocus$GateResult=="pos",-ncol(euclidFocus)]
     lowCent <- apply(negPop, 2, mean)
     highCent <- apply(posPop, 2, mean)
     centMat <- rbind(lowCent, highCent)
