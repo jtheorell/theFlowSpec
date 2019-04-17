@@ -56,7 +56,7 @@ turnDerGate <- function(inDatDonList, gateMarker, euclidMarkers, lowPeak=TRUE, a
     topTwo <- Turns[order(Da$y[Turns], decreasing=TRUE)][1:2]
 
     #And here, it is made clear if it is meaningful to talk about two peaks, or if it is indeed only one.
-    #First, it is determined if there are two peaks whatsoever, and if so, by how much these are separated. Currently, they need to be separated by at least 10% of the total range from the first to th 99th percentile to count as two peaks.
+    #First, it is determined if there are two peaks whatsoever, and if so, by how much these are separated. Currently, they need to be separated by at least 5% of the total range from the first to th 99th percentile to count as two peaks.
     robRange <- quantile(markerData, c(0.1, 0.9))
     tenth <- abs(unname((robRange[2]-robRange[1])*0.1))
     if(is.na(topTwo[2])==FALSE && abs(Da$x[topTwo][1]-Da$x[topTwo][2])>tenth){

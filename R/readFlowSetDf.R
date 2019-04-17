@@ -13,11 +13,7 @@
 #' @export readFlowSetDf
 readFlowSetDf <- function(path=".", idInfo, nRows="all"){
 
-
-  oldWd <- getwd()
-  setwd(path)
-
-  if(grepl(".fcs", dir()[1])){
+  if(grepl(".fcs", dir(path)[1])){
     if(nRows=="all"){
       which.lines=NULL
     } else {
@@ -45,7 +41,11 @@ readFlowSetDf <- function(path=".", idInfo, nRows="all"){
     } else {
       nrows <- nRows
     }
-    filenames <- list.files(path = ".", pattern = NULL, all.files = FALSE, full.names = FALSE, recursive = FALSE)
+    filenames <- list.files(path = path, pattern = NULL, all.files = FALSE, full.names = FALSE, recursive = FALSE)
+    filenames <- paste0(path, "/", filenames)
+    #Here, the idInfo is prepended with the path information
+    idInfo <- lapply(idInfo, function(x) paste0(path, "/", x))
+
     if(missing(idInfo)==FALSE){
       flowSetExprs <- ldply(filenames, function(x) retrieveCsvWNames(x, idInfo, nrows=nrows))
 
@@ -57,5 +57,4 @@ readFlowSetDf <- function(path=".", idInfo, nRows="all"){
   }
 
   return(flowSetExprs)
-  setwd(oldWd)
 }
