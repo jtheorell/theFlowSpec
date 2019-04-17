@@ -1,8 +1,11 @@
 #' @importFrom DepecheR dScale
 #' @importFrom FNN knnx.index
 #' @export turnDerGateCoFunction
-turnDerGateCoFunction <- function(euclidFocus, gateMarker, gateVal, gateWeight, graphName, adjust, n){
-  #First, the area closest to the gate is exluded from the populations. This is donw, by excluding not half of the events, but rather half of the x-axis area that the population takes up.
+turnDerGateCoFunction <- function(euclidFocus, gateMarker, gateVal, gateWeight,
+                                  graphName, adjust, n){
+  #First, the area closest to the gate is exluded from the populations. This is
+  #done by excluding not half of the events, but rather half of the x-axis area
+  #that the population takes up.
   allNeg <- euclidFocus[euclidFocus[,gateMarker]<gateVal,]
   allPos <- euclidFocus[euclidFocus[,gateMarker]>=gateVal,]
   clearNegRange <- quantile(allNeg[,gateMarker], c(0.01, 0.99))
@@ -13,7 +16,8 @@ turnDerGateCoFunction <- function(euclidFocus, gateMarker, gateVal, gateWeight, 
   euclidFocus$GateResult[euclidFocus[,gateMarker]<clearNegBorder] <- "neg"
   euclidFocus$GateResult[euclidFocus[,gateMarker]>clearPosBorder] <- "pos"
 
-  if(nrow(euclidFocus[euclidFocus$GateResult=="neg",])>50 && nrow(euclidFocus[euclidFocus$GateResult=="pos",])>50){
+  if(nrow(euclidFocus[euclidFocus$GateResult=="neg",])>50 &&
+     nrow(euclidFocus[euclidFocus$GateResult=="pos",])>50){
     euclidScaled <- dScale(euclidFocus[-ncol(euclidFocus)])
     euclidScaled[,gateMarker] <- euclidScaled[,gateMarker]*gateWeight
     negPop <- euclidScaled[euclidFocus$GateResult=="neg",-ncol(euclidFocus)]
@@ -28,7 +32,9 @@ turnDerGateCoFunction <- function(euclidFocus, gateMarker, gateVal, gateWeight, 
     neighbors[euclidFocus[,gateMarker]>=gateVal] <- 2
   }
 
-  negPop <- density(euclidFocus[neighbors==1, gateMarker],from=min(euclidFocus[,gateMarker]), to=max(euclidFocus[,gateMarker]), adjust=adjust, n=n)
+  negPop <- density(euclidFocus[neighbors==1, gateMarker],
+                    from=min(euclidFocus[,gateMarker]),
+                    to=max(euclidFocus[,gateMarker]), adjust=adjust, n=n)
   #Here, all points outside the data range are excluded
   minNeg <- min(euclidFocus[neighbors==1, gateMarker])
   maxNeg <- max(euclidFocus[neighbors==1, gateMarker])
@@ -43,7 +49,9 @@ turnDerGateCoFunction <- function(euclidFocus, gateMarker, gateVal, gateWeight, 
 
   #(negYFull/max(negYFull))*length(euclidFocus[euclidFocus$GateVal=="neg", gateMarker])
 
-  posPop <- density(euclidFocus[neighbors==2, gateMarker],from=min(euclidFocus[,gateMarker]), to=max(euclidFocus[,gateMarker]), adjust=adjust, n=n)
+  posPop <- density(euclidFocus[neighbors==2, gateMarker],
+                    from=min(euclidFocus[,gateMarker]),
+                    to=max(euclidFocus[,gateMarker]), adjust=adjust, n=n)
   #Here, all points outside the data range are excluded
   minpos <- min(euclidFocus[neighbors==2, gateMarker])
   maxpos <- max(euclidFocus[neighbors==2, gateMarker])
@@ -55,9 +63,9 @@ turnDerGateCoFunction <- function(euclidFocus, gateMarker, gateVal, gateWeight, 
   posConst <- length(euclidFocus[neighbors==2, gateMarker])/sum(posYFull)
   posYScaled <- posYFull*posConst
 
-  #(posYFull/max(posYFull))*length(euclidFocus[euclidFocus$GateVal=="pos", gateMarker])
-
-  fullPop <- density(euclidFocus[, gateMarker],from=min(euclidFocus[,gateMarker]), to=max(euclidFocus[,gateMarker]), adjust=adjust, n=n)
+  fullPop <- density(euclidFocus[, gateMarker],
+                     from=min(euclidFocus[,gateMarker]),
+                     to=max(euclidFocus[,gateMarker]), adjust=adjust, n=n)
   #Here, all points outside the data range are excluded
   minFull <- min(euclidFocus[, gateMarker])
   maxFull <- max(euclidFocus[, gateMarker])
@@ -69,12 +77,11 @@ turnDerGateCoFunction <- function(euclidFocus, gateMarker, gateVal, gateWeight, 
   fullConst <- length(euclidFocus[, gateMarker])/sum(fullYFull)
   fullYScaled <- fullYFull*fullConst
 
-  #(fullYFull/max(fullYFull))*length(euclidFocus[, gateMarker])
-
-  #max(c(length(euclidFocus[euclidFocus$GateVal=="neg", gateMarker]), length(euclidFocus[euclidFocus$GateVal=="pos", gateMarker])))
   pdf(graphName)
-  plot(c(0, max(c(negRangeXFull, posRangeXFull, fullRangeXFull))), c(0, max(c(negYScaled, posYScaled, fullYScaled))), main="", col="white")
-  polygon(x=fullRangeXFull, y=fullYScaled, col="white", border="black", lty=2, lwd=2)
+  plot(c(0, max(c(negRangeXFull, posRangeXFull, fullRangeXFull))),
+       c(0, max(c(negYScaled, posYScaled, fullYScaled))), main="", col="white")
+  polygon(x=fullRangeXFull, y=fullYScaled, col="white", border="black", lty=2,
+          lwd=2)
   polygon(x=negRangeXFull, y=negYScaled, col="#0000FF55", border="blue", lwd=2)
   polygon(x=posRangeXFull, y=posYScaled, col="#FF000055", border="red", lwd=2)
   abline(v=gateVal, col="black", lwd=2, lty=2)
