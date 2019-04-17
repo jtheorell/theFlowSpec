@@ -14,50 +14,49 @@
 #' @seealso \code{\link{creEmptyCorrMat}}, \code{\link{specUnmix}},
 #' \code{\link{transformData}}
 #' @examples
-#' #Load some data
+#' # Load some data
 #' data(fullPanel)
-#'
-#' #Load a spectral matrix
+#' 
+#' # Load a spectral matrix
 #' data(specMat)
-#'
-#' #Select the rows that should be compensated
-#' fluoExprs <- fullPanel[,grepl("[VBRY]", colnames(fullPanel))]
-#'
-#' #Unmix this dataset
+#' 
+#' # Select the rows that should be compensated
+#' fluoExprs <- fullPanel[, grepl("[VBRY]", colnames(fullPanel))]
+#' 
+#' # Unmix this dataset
 #' dataUnmixed <- specUnmix(fluoExprs, specMat)
-#'
-#' #Now correct the data with this.
+#' 
+#' # Now correct the data with this.
 #' correcData <- correctUnmix(dataUnmixed)
-#'
-#' #In this first run, an empty correction matrix will be created,
+#' 
+#' # In this first run, an empty correction matrix will be created,
 #' # but in later iterations, the correcMat can be changed to include the
-#' #corrections needed.
-#'
-#' #For example, Qdot705 is "overcompensated" to AF700 in the spectral unmixing
-#' #process. For this reason, a correction is included:
-#' correcMat["Qdot705","AF700"] <- 0.1
-#'
-#' #And now, a new correction is made
+#' # corrections needed.
+#' 
+#' # For example, Qdot705 is "overcompensated" to AF700 in the spectral unmixing
+#' # process. For this reason, a correction is included:
+#' correcMat["Qdot705", "AF700"] <- 0.1
+#' 
+#' # And now, a new correction is made
 #' correcData <- correctUnmix(dataUnmixed, correcMat)
-#'
-#' #And so on, and so forth.
-#'
+#' 
+#' # And so on, and so forth.
 #' @export correctUnmix
-correctUnmix <- function(unmixData, correcMat, transform=TRUE, coFactors=rep(1500, ncol(unmixData))){
+correctUnmix <- function(unmixData, correcMat, transform = TRUE, coFactors = rep(1500, ncol(unmixData))) {
 
-  if(missing(correcMat)){
-    correcMat <- matrix(0, nrow=ncol(unmixData), ncol=ncol(unmixData), dimnames = list(colnames(unmixData), colnames(unmixData)))
-    diag(correcMat) <- 1
-  }
+    if (missing(correcMat)) {
+        correcMat <- matrix(0, nrow = ncol(unmixData), ncol = ncol(unmixData), dimnames = list(colnames(unmixData), colnames(unmixData)))
+        diag(correcMat) <- 1
+    }
 
-  corrUnmixed <- specUnmix(unmixData, correcMat)
+    corrUnmixed <- specUnmix(unmixData, correcMat)
 
-  print("Now, transformation is started")
-  if(transform==TRUE){
-    transformedData <- transformData(corrUnmixed, coFactors=coFactors)
-    return(transformedData)
-  } else {
-    return(corrUnmixed)
-  }
+    print("Now, transformation is started")
+    if (transform == TRUE) {
+        transformedData <- transformData(corrUnmixed, coFactors = coFactors)
+        return(transformedData)
+    } else {
+        return(corrUnmixed)
+    }
 
 }

@@ -12,62 +12,61 @@
 #' @return The unmixed data. It will be returned in the format it was imported as.
 #'
 #' @examples
-#' #Load some uncompensated data
+#' # Load some uncompensated data
 #' data(fullPanel)
-#'
-#' #Select the rows that should be compensated
-#' fluoExprs <- fullPanel[,grepl("[VBRY]", colnames(fullPanel))]
-#' #Load the spectral unmixing matrix generated with controls from the same experiment. These can be generated using the specMatCalc function.
+#' 
+#' # Select the rows that should be compensated
+#' fluoExprs <- fullPanel[, grepl("[VBRY]", colnames(fullPanel))]
+#' # Load the spectral unmixing matrix generated with controls from the same experiment. These can be generated using the specMatCalc function.
 #' data(specMat)
-#'
-#' #And now, just run the function!
+#' 
+#' # And now, just run the function!
 #' dataComp <- specUnmix(fluoExprs, specMat)
-#'
 #' @export specUnmix
-specUnmix <- function(rawData, specMat){
+specUnmix <- function(rawData, specMat) {
 
-  if(nrow(rawData)<70000){
-    # Make the least squares fit based on the raw, uncompensated data.
-    ls_corr <- lsfit(x=t(specMat), y=t(rawData), intercept=FALSE)
-    #Export the unmixed portion of the least squares result.
-    fullResult <- t(ls_corr$coefficients)
-  } else {
+    if (nrow(rawData) < 70000) {
+        # Make the least squares fit based on the raw, uncompensated data.
+        ls_corr <- lsfit(x = t(specMat), y = t(rawData), intercept = FALSE)
+        # Export the unmixed portion of the least squares result.
+        fullResult <- t(ls_corr$coefficients)
+    } else {
 
-    nCores <- detectCores() - 1
-    cl <-  parallel::makeCluster(nCores, type = "SOCK")
-    registerDoSNOW(cl)
-    firstRow <- 1
-    resultList <- list()
-    x <- 1
-    while(firstRow<nrow(rawData)){
-      timeBefore <- Sys.time()
-      if(((firstRow+nCores*50000)-1)<nrow(rawData)){
-        rowRange <- firstRow:(firstRow+(nCores*50000)-1)
-      } else {
-        rowRange <- firstRow:nrow(rawData)
-      }
-      #Here, the data is divided into suitable chunks
-      rowRangeSubsets <- split(rowRange, sort(rowRange%%nCores))
+        nCores <- detectCores() - 1
+        cl <- parallel::makeCluster(nCores, type = "SOCK")
+        registerDoSNOW(cl)
+        firstRow <- 1
+        resultList <- list()
+        x <- 1
+        while (firstRow < nrow(rawData)) {
+            timeBefore <- Sys.time()
+            if (((firstRow + nCores * 50000) - 1) < nrow(rawData)) {
+                rowRange <- firstRow:(firstRow + (nCores * 50000) - 1)
+            } else {
+                rowRange <- firstRow:nrow(rawData)
+            }
+            # Here, the data is divided into suitable chunks
+            rowRangeSubsets <- split(rowRange, sort(rowRange %% nCores))
 
-      #Now, the datasets are constructed from this
-      lsDataSets <- lapply(1:length(rowRangeSubsets), function(x) return(rawData[rowRangeSubsets[[x]],]))
+            # Now, the datasets are constructed from this
+            lsDataSets <- lapply(1:length(rowRangeSubsets), function(x) return(rawData[rowRangeSubsets[[x]], ]))
 
-      resultFocus <- foreach(i=1:nCores) %dopar% t((lsfit(x=t(specMat), y=t(lsDataSets[[i]]), intercept=FALSE))$coefficients)
+            resultFocus <- foreach(i = 1:nCores) %dopar% t((lsfit(x = t(specMat), y = t(lsDataSets[[i]]), intercept = FALSE))$coefficients)
 
-      resultList[[x]] <- do.call("rbind", resultFocus)
+            resultList[[x]] <- do.call("rbind", resultFocus)
 
 
-      timeAfter <-  as.numeric(Sys.time()-timeBefore)
-      print(paste0("Rows ", rowRange[1], " to ", rowRange[length(rowRange)], " unmixed in ", timeAfter, " seconds. Now, ", nrow(rawData)-rowRange[length(rowRange)], " rows are left."))
-      firstRow <- (rowRange[length(rowRange)]+1)
-      x <- x+1
+            timeAfter <- as.numeric(Sys.time() - timeBefore)
+            print(paste0("Rows ", rowRange[1], " to ", rowRange[length(rowRange)], " unmixed in ", timeAfter, " seconds. Now, ", nrow(rawData) - rowRange[length(rowRange)], " rows are left."))
+            firstRow <- (rowRange[length(rowRange)] + 1)
+            x <- x + 1
+        }
+
+
+        parallel::stopCluster(cl)
+        fullResult <- do.call("rbind", resultList)
     }
 
 
-    parallel::stopCluster(cl)
-    fullResult <- do.call("rbind", resultList)
-  }
-
-
-  return(fullResult)
+    return(fullResult)
 }

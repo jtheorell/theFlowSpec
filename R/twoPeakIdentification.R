@@ -46,7 +46,7 @@ twoPeakIdentification <- function(markerData, volRatio = volRatio) {
             peakResult <- list("nPeaks" = 2, "peakData" = Da$x[topTwo])
 
         } else {
-            peakResult <- list("nPeaks" = 1, "peakData" =  Da$x[topTwo[1]])
+            peakResult <- list("nPeaks" = 1, "peakData" = Da$x[topTwo[1]])
         }
     } else {
         peakResult <- list("nPeaks" = 1, "peakData" = Da$x[topTwo[1]])
