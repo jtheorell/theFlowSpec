@@ -18,27 +18,35 @@
 #' (for fcs files) and one colum for each specified slot above. If no
 #' gsub-pattern is provided, only a single column with the full file name will
 #' be used to separate the observations from each file.
-#' @export flowSet2Df
+#' @export csvSet2LongDf
 
 csvSet2LongDf <- function(path = ".", idInfo, nRows = "all") {
-    if (nRows == "all") {
-        nrows = -1
-    } else {
-        nrows <- nRows
-    }
-    filenames <- file.path(path, list.files(path = path, pattern = NULL,
-        all.files = FALSE,
-        full.names = FALSE,
-        recursive = FALSE))
-    filenames <- paste0(path, "/", filenames)
-    # Here, the idInfo is prepended with the path information
-    idInfo <- lapply(idInfo, function(x) paste0(path, "/", x))
+    nrows <- ifelse(nRows == "all", -1, nRows)
+
+    filenames <- list.files(path = path, full.names = TRUE)
 
     if (missing(idInfo) == FALSE) {
-        flowSetExprs <- ldply(filenames, function(x) retrieveCsvWNames(x, idInfo, nrows = nrows))
+      # Here, the idInfo is prepended with the path information
+      idInfo <- file.path(path, idInfo)
+      flowSetExprs <- ldply(filenames, function(x)
+        retrieveCsvNames(x, idInfo, nrows = nrows))
 
     } else {
-        flowSetExprs <- ldply(filenames, function(x) retrieveCsvWNames(x, nrows = nrows))
+
+        flowSetExprs <- ldply(filenames, function(x)
+          retrieveCsvNames(x, nrows = nrows))
 
     }
+}
+
+retrieveCsvNames <- function(filename, idInfo, nrows = -1) {
+  ret <- read.csv(filename, nrows = nrows)
+  if (missing(idInfo) == TRUE) {
+    ret$names <- filename
+  } else
+    for (i in 1:length(idInfo)) {
+      ret$names <- gsub(pattern = idInfo[[i]], "\\1", filename)
+      colnames(ret)[which(colnames(ret) == "names")] <- names(idInfo)[i]
+    }
+  ret
 }

@@ -40,8 +40,16 @@ flowSet2LongDf <- function(frames, idInfo) {
     dateVector <- as.vector(fsApply(flowSetRaw,
         function(x) x@description$`$DATE`))
     flowSetExprs$acqDate <-
-        unlist(retrieveFlowSetNames(nameVector = dateVector, specFlowSet = flowSetRaw,
-            gsubpattern = ""))
+        unlist(retrieveFlowSetNames(nameVector = dateVector,
+                                    specFlowSet = flowSetRaw,
+                                    gsubpattern = ""))
 
     return(flowSetExprs)
+}
+
+retrieveFlowSetNames <- function(nameVector, specFlowSet, gsubpattern) {
+  lengthList <- as.list(fsApply(specFlowSet, function(x) nrow(x@exprs)))
+  nameVectorShort <- as.list(gsub(pattern = gsubpattern, "\\1", nameVector))
+  return(as.vector(mapply(function(x, y) rep(x, times = y), nameVectorShort,
+                          lengthList)))
 }
