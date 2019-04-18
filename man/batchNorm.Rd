@@ -4,39 +4,42 @@
 \alias{batchNorm}
 \title{Neighbor batch normalisation}
 \usage{
-batchNorm(normSet, normFile, controlFile, normNames = colnames(normFile),
-  exclColNmStr = c("Id", "id", "onor", "ample"),
-  exclCategorical = TRUE, kNeighK = 10, volRatio = 0.1)
+batchNorm(normSet, normFrame, controlFrame,
+  normNames = colnames(normFrame), exclColNmStr = c("ime"),
+  volRatio = 0.1, transCoFac = "default")
 }
 \arguments{
-\item{normSet}{A list of files that should be batch normalized.}
+\item{normSet}{A flowSet that should be normalized. If the normFrame should 
+be normalized, it needs to be included here.}
 
-\item{normFile}{The file that contains the events which will be used for the
-normalization.}
+\item{normFrame}{The flowFrame that contains the events which will be used 
+for the normalization.}
 
-\item{controlFile}{The data cloud in which the nearest neighbors for the 
-normFile events should be identified.}
+\item{controlFrame}{The flowFrame containing the control values.}
 
 \item{normNames}{The variables that should be normalized. Default is all that
 do not fall into one of the two excl categories below.}
 
-\item{exclColNmStr}{A vector of strings that are not accepted in the 
+\item{exclColNmStr}{A vector of strings that are not accepted in the
 colnames of any normNames.}
-
-\item{exclCategorical}{Logical: should normNames with less than 10 
-unique values be excluded? Defaults to TRUE.}
-
-\item{kNeighK}{The number of nearest neighbors that each of the normalization
-band events are compared to. The higher the number, the more robust, and the
-less sensitive to outliers, will the  algorithm be.}
 
 \item{volRatio}{Defining how small the smaller of the two peaks can be to be
 considered a true peak. It is a fraction of the volume of the larger peak.
 Default is 0.05, i.e. if the volume of the second peak is 5 percent or larger
 than the volume of the first peak, it is considered a peak.}
+
+\item{transCoFac}{This value defines the standard value for the 
+transformation during the normalization. This is only applied internally, so
+transformation needs to be performed afterwards, preferrably with individual
+values for each channel. In the "default" case, the function defines the file
+as a CyTOF file, and applies the transformation value 8, if >5% of the values
+are 0. Otherwise, the value 256 is applied.}
+
+\item{exclCategorical}{Logical: should normNames with less than 10
+unique values be excluded? Defaults to TRUE.}
 }
 \value{
-The normSet normalized. If the normFile was not among the normSet 
+The normSet normalized. If the normFrame was not among the normSet
 files, it will be added as the final object to the list.
 }
 \description{
@@ -45,7 +48,7 @@ been acquired on multiple time points, and the files from the different
 time points should be compared. The function works most optimally if all the
 data came from a sample that was processed and frozen the same day, i.e. a true
 technical control, but it also works reasonably well with data from the same
-donor from different time points, as it is robust to outlier populations 
-changing between the dates. It is not recommended to apply this function to 
+donor from different time points, as it is robust to outlier populations
+changing between the dates. It is not recommended to apply this function to
 files with less than 5000 events, and more than 100 000 events are preferrable.
 }

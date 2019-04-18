@@ -16,7 +16,7 @@
 #' (for fcs files) and one colum for each specified slot above. If no
 #' gsub-pattern is provided, only a single column with the full file name will
 #' be used to separate the observations from each file.
-#' @export flowSet2longDf
+#' @export flowSet2LongDf
 flowSet2LongDf <- function(frames, idInfo) {
 
     flowSetExprs <- data.frame(fsApply(flowSetRaw, exprs))

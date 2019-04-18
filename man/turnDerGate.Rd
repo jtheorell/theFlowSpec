@@ -40,13 +40,12 @@ but first identifies the median in the gate dimension for each population, and t
 put on the gating variable in the final euclidean distance calculation, so that the overlap between the populations is somewhat lowered.
 }
 \examples{
-#Here is a simple example
+# Here is a simple example
 library(DepecheR)
 data(testData)
-testDataList <- split(testData, f=testData$ids)
-#This will be the diretory where the folder will be created:
+testDataList <- split(testData, f = testData$ids)
+# This will be the diretory where the folder will be created:
 getwd()
 
-testGates <- turnDerGate(testDataList, 3, c(2:15), adjust=2)
-
+testGates <- turnDerGate(testDataList, 3, c(2:15), adjust = 2)
 }

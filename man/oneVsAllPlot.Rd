@@ -4,25 +4,31 @@
 \alias{oneVsAllPlot}
 \title{Plotting all variables against a single variable}
 \usage{
-oneVsAllPlot(dataset, yCol, nRows = 10000, markerName = "default",
-  color = "red", saveResult = TRUE)
+oneVsAllPlot(flowData, yCol = 1, nRows = 10000, yName = "default",
+  saveResult = TRUE)
 }
 \arguments{
-\item{dataset}{This is the full dataset, either a dataframe or a matrix, that should be plotted. If it has more rows than "nrows", a random subsample (without resampling) will be plotted}
+\item{flowData}{This is the full dataset, either a flowFrame or a flowSet, 
+that should be plotted. If it has more rows than "nRows", a subsample (with 
+equal contributions from each sample if a flowSet) will be plotted.}
 
-\item{yCol}{Here, the variable to be plotted against all the others is selected. It can be either a number or the column name of interest.}
+\item{yCol}{Here, the variable to be plotted against all the others is 
+selected. It can be either a number or the column name of interest.}
 
-\item{nRows}{The number of rows that will be plotted. The fewer, the faster, but the resolution also decreases, naturally. Default is 10000}
+\item{nRows}{The number of rows that will be used to construct the plot. 
+The fewer, the faster, but the resolution also decreases, naturally. Default
+is 100000.}
 
-\item{markerName}{If a specific name for the parameter in the graph name is wanted, it should be added here. Default is name(yCol)_vs_all_others}
+\item{yName}{If a name different from yCol should be used, it can be added 
+here.}
 
-\item{color}{The color for the density peaks in the plots.}
-
-\item{saveResult}{If you do not want to save the results, and view them directly on the screen instead, you set this to false.}
+\item{saveResult}{Should the result be saved as a file?}
 }
 \value{
-A graph with one sub-graph for each variable that the y-variable should be plotted against.
+A plot with one 2D-graph for each variable that the y-variable
+should be plotted against.
 }
 \description{
-This function is useful both when setting appropriate gates and when the adjustments of the compensation are done
+This function is useful both when setting appropriate gates and when the 
+adjustments of the compensation are done
 }

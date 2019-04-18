@@ -1,77 +1,71 @@
 #' Plotting all variables against a single variable
 #'
 #'
-#' This function is useful both when setting appropriate gates and when the adjustments of the compensation are done
-#' @param dataset This is the full dataset, either a dataframe or a matrix, that should be plotted. If it has more rows than "nrows", a random subsample (without resampling) will be plotted
-#' @param yCol Here, the variable to be plotted against all the others is selected. It can be either a number or the column name of interest.
-#' @param nRows The number of rows that will be plotted. The fewer, the faster, but the resolution also decreases, naturally. Default is 10000
-#' @param color The color for the density peaks in the plots.
-#' @param markerName If a specific name for the parameter in the graph name is wanted, it should be added here. Default is name(yCol)_vs_all_others
-#' @param saveResult If you do not want to save the results, and view them directly on the screen instead, you set this to false.
-#' @return A graph with one sub-graph for each variable that the y-variable should be plotted against.
-#'
+#' This function is useful both when setting appropriate gates and when the 
+#' adjustments of the compensation are done
+#' @param flowData This is the full dataset, either a flowFrame or a flowSet, 
+#' that should be plotted. If it has more rows than "nRows", a subsample (with 
+#' equal contributions from each sample if a flowSet) will be plotted.
+#' @param yCol Here, the variable to be plotted against all the others is 
+#' selected. It can be either a number or the column name of interest.
+#' @param nRows The number of rows that will be used to construct the plot. 
+#' The fewer, the faster, but the resolution also decreases, naturally. Default
+#' is 100000.
+#' @param yName If a name different from yCol should be used, it can be added 
+#' here.
+#' @param saveResult Should the result be saved as a file? 
+#' @return A plot with one 2D-graph for each variable that the y-variable
+#' should be plotted against.
+#' @importFrom flowCore fsApply exprs
+#' @importFrom reshape2 melt
+#' @importFrom ggplot2 ggplot aes facet_wrap geom_hex xlab ylab theme 
+#' element_blank element_line ggsave
 #' @export oneVsAllPlot
-oneVsAllPlot <- function(dataset, yCol, nRows = 10000, markerName = "default", color = "red", saveResult = TRUE) {
-    if (class(dataset) == "matrix") {
-        dataset <- as.data.frame(dataset)
-    }
-
-
-    if (nrow(dataset) > nRows) {
-        datasetInUse <- dataset[sample(1:nrow(dataset), size = nRows), ]
-    } else {
-        warning(paste0("The number of rows in the dataset was only ", nrow(dataset), ", so the output will be restricted to this"))
-        datasetInUse <- dataset
-    }
-
-    # If the yCol is given as a character, it is converted to the correct number here
+oneVsAllPlot <- function(flowData, yCol=1, nRows = 10000, yName = "default", 
+                         saveResult = TRUE) {
+    
+    plotExprs <- plotDownSample(flowData, nRows)
+    
+    # If the yCol is given as a character, it is converted to the correct number
+    #here
     if (class(yCol) == "character") {
-        yCol <- which(colnames(dataset) == yCol)
+        yCol <- which(colnames(plotExprs) == yCol)
     }
 
-    if (markerName == "default") {
-        markerName <- colnames(dataset)[yCol]
+    if (yName == "default") {
+        yName <- colnames(plotExprs)[yCol]
     }
 
-
-    # Here, the yCol is separated from the rest of the data
-    yColData <- datasetInUse[, yCol]
-    nonYColData <- datasetInUse[, -yCol]
-
-    # now, dotsize is decided
-    dotSize <- 50 / sqrt(nrow(datasetInUse))
-
-    # Now, the plots are created. First, they are divided in sections of 4, as the first one in every quartette will have different axes.
-
-
-    if (saveResult == TRUE) {
-        png(width = 1300, height = 1300, paste0(markerName, "_vs_all_others.png"))
+    #Now, the data is truncated, to minimize influence by individual events
+    #on the display
+    plotExprs <- apply(plotExprs, 2, function(x) {
+        high <- quantile(x, 0.999)
+        low <- quantile(x, 0.001)
+        x[x > high] <- high
+        x[x < low] <- low
+        return(x)
+    })
+   
+    #Here, the dataset is divided into a non-y and an y part
+    nonYPlotData <- as.data.frame(plotExprs[,which(colnames(plotExprs) 
+                                                   != yName)])
+    yPlotData <- as.data.frame(plotExprs[,yName])
+    
+    #Now, the plots are created. 
+    
+    longPlot <- melt(nonYPlotData)
+    longPlot$Y <- rep(yPlotData[,1], times=ncol(nonYPlotData))
+    ggplot(longPlot, aes(x = value, y = Y)) +
+        facet_wrap(~variable, scales = "free") +
+        geom_hex() + xlab("") + ylab(yName) + theme(
+            axis.text = element_blank(),
+            axis.ticks = element_blank(),
+            panel.grid.major = element_blank(),
+            panel.grid.minor = element_blank(),
+            panel.background = element_blank(),
+            axis.line = element_line(colour = "black"))
+    if(saveResult == TRUE){
+        ggsave(paste0(yName, "_vs_all_others.pdf"))
     }
-    par(mfrow = c(6, 6), mai = c(0, 0, 0, 0), pty = "m", mar = c(3, 0, 0, 0), oma = c(6, 4, 4, 6), cex = 1.2, mgp = c(1, 0.5, 0))
-    for (i in 1:ncol(nonYColData)) {
-        if (i == 1 || (i - 1) / 6 == round((i - 1) / 6)) {
-            oneVsAllPlotCoFunction(xVar = nonYColData[, i], yVar = yColData, color = color, yaxt = "s", dotSize = dotSize, xlab = "", ylab = "")
-            title(xlab = colnames(nonYColData)[i], line = 1.5)
-        } else {
-            oneVsAllPlotCoFunction(xVar = nonYColData[, i], yVar = yColData, color = color, xlab = "", ylab = "", yaxt = "n", dotSize = dotSize)
-            title(xlab = colnames(nonYColData)[i], ylab = "", line = 1.5)
-        }
-        mtext(paste0(colnames(datasetInUse)[yCol], " vs all other markers"), side = 3, line = 2, outer = TRUE, cex = 2)
-    }
-    if (saveResult == TRUE) {
-        dev.off()
-    }
 
-}
-
-oneVsAllPlotCoFunction <- function(xVar, yVar, color, xlab, ylab, yaxt = "s", dotSize = dotSize) {
-
-  cols <- colorRampPalette(c("black", "grey", color))(256)
-  varDf <- data.frame(xVar, yVar)
-
-  ## Use densCols() output to get density at each point. The colors here are only supporting the coming order of the rows further down the script.
-  x <- densCols(xVar, yVar, colramp = colorRampPalette(c("black", "white")))
-  varDf$dens <- col2rgb(x)[1, ] + 1L
-  varDf$col <- cols[varDf$dens]
-  plot(yVar ~ xVar, data = varDf[order(varDf$dens), ], main = NULL, pch = 20, cex = dotSize, col = col, xlab = xlab, ylab = ylab, yaxt = yaxt)
 }
