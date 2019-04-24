@@ -1,2 +1,2 @@
-# flowJake
-This is primarily a package focused on spectral unmixing of flow  cytometry data, but other simple tasks might be included as well, connected to the basics of cytometry file manipulation. 
+# theFlowSpec
+This is a package for processing of high-dimensional cytometry data, such as from mass cytometry and spectral flow cytometry. In it are functions for spectal unmixing and correction, transfomration, batch normalization and also different automated 1D filters. The package is being updated to adhere to flowCore standards, but will avoid the filter classes, and instead include the filters as logical columns in the exprs slot of the flowFrames/flowSets. 

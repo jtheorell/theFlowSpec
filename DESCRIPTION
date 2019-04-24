@@ -1,6 +1,6 @@
 Package: theFlowSpec
-Version: 0.1.0
-Date: 2018-12-29
+Version: 0.2.1
+Date: 2019-04-24
 Title: Tools for spectral unmixing of overdetermined flow-cytometry files. And other nice things.
 Authors@R: person("Jakob", "Theorell", email = "jakob.theorell@ki.se",
                   role = c("aut", "cre"))

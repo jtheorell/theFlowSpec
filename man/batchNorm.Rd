@@ -2,53 +2,62 @@
 % Please edit documentation in R/batchNorm.R
 \name{batchNorm}
 \alias{batchNorm}
-\title{Neighbor batch normalisation}
+\title{Batch normalisation}
 \usage{
-batchNorm(normSet, normFrame, controlFrame,
-  normNames = colnames(normFrame), exclColNmStr = c("ime"),
-  volRatio = 0.1, transCoFac = "default")
+batchNorm(normSet, intCtrl, extCtrl, normNames = colnames(intCtrl),
+  exclColNmStr = c("ime"), volThresh = 0.02, transCoFacs = "default",
+  zeroTrim = TRUE)
 }
 \arguments{
-\item{normSet}{A flowSet that should be normalized. If the normFrame should 
-be normalized, it needs to be included here.}
+\item{normSet}{A flowSet that should be normalized. If the intCtrl should
+be normalized and used downstream, it needs to be included here.}
 
-\item{normFrame}{The flowFrame that contains the events which will be used 
-for the normalization.}
+\item{intCtrl}{A control flowFrame that was acquired the same day as the
+normSet.}
 
-\item{controlFrame}{The flowFrame containing the control values.}
+\item{extCtrl}{A control flowFrame that the normalization should be performed
+against.}
 
 \item{normNames}{The variables that should be normalized. Default is all that
 do not fall into one of the two excl categories below.}
 
-\item{exclColNmStr}{A vector of strings that are not accepted in the
-colnames of any normNames.}
+\item{exclColNmStr}{A vector of strings that are not accepted in any
+normNames.}
 
-\item{volRatio}{Defining how small the smaller of the two peaks can be to be
+\item{volThresh}{Defining how small the smaller of the two peaks can be to be
 considered a true peak. It is a fraction of the volume of the larger peak.
 Default is 0.05, i.e. if the volume of the second peak is 5 percent or larger
 than the volume of the first peak, it is considered a peak.}
 
-\item{transCoFac}{This value defines the standard value for the 
+\item{transCoFacs}{This vector of named values define the values for the
 transformation during the normalization. This is only applied internally, so
 transformation needs to be performed afterwards, preferrably with individual
 values for each channel. In the "default" case, the function defines the file
-as a CyTOF file, and applies the transformation value 8, if >5% of the values
-are 0. Otherwise, the value 256 is applied.}
+as a CyTOF file, and applies the transformation value 8, if >5 percent of the
+values are 0. Otherwise, the value 256 is applied. NB. The entries need to be
+named in the same way as the normNames to secure that the right factor is 
+added to each variable.}
+
+\item{zeroTrim}{In the case of CyTOF data, the events at zero can often
+be so dominant, that all other density variation is dwarfed, and thus
+invisible. With this command being TRUE, the events that are confined to the
+first percentile of the data range for each variable are trimmed
+to max 10 percent of the data.}
 
 \item{exclCategorical}{Logical: should normNames with less than 10
 unique values be excluded? Defaults to TRUE.}
 }
 \value{
-The normSet normalized. If the normFrame was not among the normSet
+The normSet normalized. If the intCtrl was not among the normSet
 files, it will be added as the final object to the list.
 }
 \description{
 This function is intended to be used, when files from the same individual has
 been acquired on multiple time points, and the files from the different
 time points should be compared. The function works most optimally if all the
-data came from a sample that was processed and frozen the same day, i.e. a true
-technical control, but it also works reasonably well with data from the same
-donor from different time points, as it is robust to outlier populations
+data came from a sample that was processed and frozen the same day, i.e. a 
+true technical control, but it also works reasonably well with data from the
+same donor from different time points, as it is robust to outlier populations
 changing between the dates. It is not recommended to apply this function to
-files with less than 5000 events, and more than 100 000 events are preferrable.
+files with less than 5000 events.
 }

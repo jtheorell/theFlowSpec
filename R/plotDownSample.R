@@ -13,7 +13,7 @@ plotDownSample <- function(flowData, nRows = 10000){
     } else if(BiocGenerics::nrow(flowData) > nRows){
         plotExprs <- 
             exprs(flowData)[sample(seq_len(BiocGenerics::nrow(flowData)), 
-                                   nRow),]
+                                   nRows),]
     } else {
         plotExprs <- exprs(flowData)
         message("The number of rows in the dataset was only ", 

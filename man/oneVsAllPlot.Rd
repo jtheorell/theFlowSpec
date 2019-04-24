@@ -4,23 +4,28 @@
 \alias{oneVsAllPlot}
 \title{Plotting all variables against a single variable}
 \usage{
-oneVsAllPlot(flowData, yCol = 1, nRows = 10000, yName = "default",
-  saveResult = TRUE)
+oneVsAllPlot(flowData, yCol = 1, nRows = 10000, plotName = "default",
+  zeroTrim = TRUE, saveResult = TRUE)
 }
 \arguments{
-\item{flowData}{This is the full dataset, either a flowFrame or a flowSet, 
-that should be plotted. If it has more rows than "nRows", a subsample (with 
+\item{flowData}{This is the full dataset, either a flowFrame or a flowSet,
+that should be plotted. If it has more rows than "nRows", a subsample (with
 equal contributions from each sample if a flowSet) will be plotted.}
 
-\item{yCol}{Here, the variable to be plotted against all the others is 
+\item{yCol}{Here, the variable to be plotted against all the others is
 selected. It can be either a number or the column name of interest.}
 
-\item{nRows}{The number of rows that will be used to construct the plot. 
+\item{nRows}{The number of rows that will be used to construct the plot.
 The fewer, the faster, but the resolution also decreases, naturally. Default
 is 100000.}
 
-\item{yName}{If a name different from yCol should be used, it can be added 
+\item{plotName}{If a name different from yCol should be used, it can be added
 here.}
+
+\item{zeroTrim}{In the case of CyTOF data, the events at zero can often
+be so dominant, that all other density variation is dwarfed, and thus
+invisible. With this command, the events that are zero in both y
+and x are trimmed for each x separately.}
 
 \item{saveResult}{Should the result be saved as a file?}
 }
@@ -29,6 +34,6 @@ A plot with one 2D-graph for each variable that the y-variable
 should be plotted against.
 }
 \description{
-This function is useful both when setting appropriate gates and when the 
+This function is useful both when setting appropriate gates and when the
 adjustments of the compensation are done
 }
