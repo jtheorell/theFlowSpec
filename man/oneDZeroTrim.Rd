@@ -5,7 +5,8 @@
 \title{importFrom flowCore exprs
 importFrom BiocGenerics nrow ncol colnames}
 \usage{
-oneDZeroTrim(focusFrame, trimFrac, nRowOut, returnFlowFrame = TRUE)
+oneDZeroTrim(focusFrame, trimFrac, nRowOut, returnFlowFrame = TRUE,
+  returnPositions = FALSE)
 }
 \description{
 importFrom flowCore exprs

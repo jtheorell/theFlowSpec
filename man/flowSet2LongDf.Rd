@@ -5,14 +5,14 @@
 \title{Convert a flowSet to one long dataframe with all identifiers as separate
 #columns.}
 \usage{
-flowSet2LongDf(frames, idInfo)
+flowSet2LongDf(flowSetRaw, idInfo)
 }
 \arguments{
-\item{frames}{The flowSet to be converted. Can contain one single flowFrame.}
-
 \item{idInfo}{A list of any number of characteristics that can be derived
 from the file names. For each entry, a gsub specification of where to find
 the information in the file name should be added, such as id=""..._|..."".}
+
+\item{frames}{The flowSet to be converted. Can contain one single flowFrame.}
 }
 \value{
 A long data frame with one column per PMT/APD (or fluorochrome,

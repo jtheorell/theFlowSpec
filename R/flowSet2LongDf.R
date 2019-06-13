@@ -17,17 +17,17 @@
 #' gsub-pattern is provided, only a single column with the full file name will
 #' be used to separate the observations from each file.
 #' @export flowSet2LongDf
-flowSet2LongDf <- function(frames, idInfo) {
+flowSet2LongDf <- function(flowSetRaw, idInfo) {
 
     flowSetExprs <- data.frame(fsApply(flowSetRaw, exprs))
-    nameVector <- names(pData(phenoData(flowSetRaw))$name)
+    nameVector <- sampleNames(flowSetRaw)
 
     if (missing(idInfo)) {
         flowSetExprs$names <-
             unlist(retrieveFlowSetNames(nameVector = nameVector,
                 specFlowSet = flowSetRaw, gsubpattern = ""))
     } else {
-        for (i in 1:length(idInfo)) {
+        for (i in seq_along(idInfo)) {
             flowSetExprs$names <-
                 unlist(retrieveFlowSetNames(nameVector = nameVector,
                     specFlowSet = flowSetRaw,

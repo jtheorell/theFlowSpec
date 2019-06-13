@@ -19,10 +19,10 @@ transNames.}
 
 \item{transCoFacs}{This vector of values define the values for the
 transformation during the normalization. In the "default" case, the function
-defines the object as a CyTOF object if >5 percent of the values are 0, and 
+defines the object as a CyTOF object if >5 percent of the values are 0, and
 applies the transformation value 8. Otherwise, the value 256 is applied.}
 
-\item{unTrans}{If the reverse action should be taken, i.e. if an already 
+\item{unTrans}{If the reverse action should be taken, i.e. if an already
 transformed dataset should be un-transformed. NB! It is of great importance
 that the same transformation factors are used!}
 }
