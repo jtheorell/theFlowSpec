@@ -4,21 +4,21 @@
 \alias{correctUnmix}
 \title{Correct defects in spectral unmixing by compensation}
 \usage{
-correctUnmix(unmixData, correcMat, transform = TRUE,
-  coFactors = rep(1500, ncol(unmixData)))
+correctUnmix(unmixFlowObj, correcMat, transCoFacs = 200)
 }
 \arguments{
-\item{unmixData}{Unmixed data.}
+\item{unmixFlowObj}{A flowframe or flowset post unmixing.}
 
-\item{correcMat}{A correction matrix. If the corrections are unknown, as with
-new data, this argument can be omitted, and an empty correcMat will be
-created internally.}
+\item{correcMat}{A correction matrix. If this is the first round, the
+executionof this function needs to be preceeded by the generation of this
+matrix, for example by using the \code{\link{correcMatCreate}} function.}
 
-\item{transform}{If transformation should be performed. Defaults to TRUE.
-Might be good to turn off once the correction phase of the analysis is over,
-and the transofrmaiton should be optimized.}
-
-\item{coFactors}{Used if transform==TRUE. See \code{\link{transformData}}.}
+\item{transCoFacs}{If transformation should be performed, the transformation
+cofactors can be added here. Three possible inputs: a vector with specific
+cofactors for each variable, a set value that will be used for all variables,
+and FALSE.
+Note: It might be good to set this to FALSE in the final round, to optimize
+the transoformations externally. See \code{\link{arcTrans}}.}
 }
 \description{
 This function provides a way to reduce the defects in the spectral unmixing,
@@ -54,6 +54,5 @@ correcData <- correctUnmix(dataUnmixed, correcMat)
 # And so on, and so forth.
 }
 \seealso{
-\code{\link{creEmptyCorrMat}}, \code{\link{specUnmix}},
-\code{\link{transformData}}
+\code{\link{specUnmix}}, \code{\link{arcTrans}}
 }

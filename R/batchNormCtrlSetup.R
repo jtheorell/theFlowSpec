@@ -73,12 +73,16 @@ batchNormCtrlSetup <- function(ctrlFrame, normNames = colnames(ctrlFrame),
 
   WellDefined1 <- unlist(lapply(newNormVals, `[[`, "WellDefined"))
 
+  if(missing(nonLevel1Var)==FALSE){
+    for(i in seq_along(newNormVals)){
+      if(names(newNormVals)[i] %in% nonLevel1Var){
+        newNormVals[[i]]$WellDefined <- FALSE
+      }
+    }
+  }
+
   newNormValsWDef1 <- newNormVals[WellDefined1]
 
-  if(missing(nonLevel1Var)==FALSE){
-    newNormValsWDef1 <- newNormValsWDef1[-which(names(newNormValsWDef1) %in%
-                                                  nonLevel1Var)]
-  }
   ctrlVarsUnRanked <- names(newNormValsWDef1)
   LowVertexes <- unlist(lapply(newNormValsWDef1, `[[`, "LowVertex"))
   PeakDistDivided <- 1/unlist(lapply(newNormValsWDef1, `[[`, "PeakDist"))
@@ -99,8 +103,7 @@ batchNormCtrlSetup <- function(ctrlFrame, normNames = colnames(ctrlFrame),
                                  ctrlVarsRankedFrameTrans =
                                    ctrlFrameTrans[, c(i, ctrlVarsRanked)],
                                  lowVertThresh = lowVertThresh,
-                                 volThresh = volThresh,
-                                 nonLevel1Var = nonLevel1Var))
+                                 volThresh = volThresh))
 
   names(newNormVals) <- names(transCoFacs)
 
@@ -125,6 +128,8 @@ bNormCSetupCo1 <- function(ctrlVar, transCoFac, lowVertThresh, volThresh) {
   #stratify the data, to increase the separation of the populations.
 
   ctrlVarPeaksUnTrans <- sinh(ctrlVarPeaks$PeakPos)*transCoFac
+  lowQuantileUnTrans <- sinh(quantile(ctrlVarTrans[1], 0.01))*transCoFac
+  highQuantileUnTrans <- sinh(quantile(ctrlVarTrans[1], 0.99))*transCoFac
 
   if(length(ctrlVarPeaksUnTrans) == 2){
 
@@ -136,7 +141,9 @@ bNormCSetupCo1 <- function(ctrlVar, transCoFac, lowVertThresh, volThresh) {
                           "PeakDist" = abs(ctrlVarPeaksUnTrans[1]-
                                              ctrlVarPeaksUnTrans[2]),
                           "FilterVar" = NA,
-                          "OptFilter" = NA)
+                          "OptFilter" = NA,
+                          "lowQuant" = lowQuantileUnTrans,
+                          "highQuant" = highQuantileUnTrans)
 
     localNormVals$WellDefined <-
       ifelse(ctrlVarPeaks$LowVertex/min(ctrlVarPeaks$Height) <=
@@ -145,17 +152,19 @@ bNormCSetupCo1 <- function(ctrlVar, transCoFac, lowVertThresh, volThresh) {
     localNormVals <- list("WellDefined" = FALSE,
            "LowPeakCtrl" = ctrlVarPeaksUnTrans[1],
            "HighPeakCtrl" = NA,
-           "FilterVar" = NA)
+           "FilterVar" = NA,
+           "lowQuant" = lowQuantileUnTrans,
+           "highQuant" = highQuantileUnTrans)
   } else {
     localNormVals <- list("WellDefined" = FALSE,
-                          "LowPeakCtrl" = ctrlVarPeaksUnTrans[1],
-                          "HighPeakCtrl" =
-                            ctrlVarPeaksUnTrans[c(2,3)][
-                              which.max(ctrlVarPeaks$DensVol[c(2,3)])],
+                          "LowPeakCtrl" = NA,
+                          "HighPeakCtrl" = NA,
                           "DensVol" = c(ctrlVarPeaks$DensVol[1],
                                         ctrlVarPeaks$DensVol[c(2,3)][
                                           which.max(ctrlVarPeaks$DensVol[c(2,3)])]),
-                          "FilterVar" = NA)
+                          "FilterVar" = NA,
+                          "lowQuant" = lowQuantileUnTrans,
+                          "highQuant" = highQuantileUnTrans)
     }
 
   return(localNormVals)
@@ -163,12 +172,16 @@ bNormCSetupCo1 <- function(ctrlVar, transCoFac, lowVertThresh, volThresh) {
 }
 
 bNormCSetupCo2 <- function(newNormVal, ctrlVar, ctrlVarName, transCoFac,
-                           ctrlVarsRankedFrameTrans, lowVertThresh, volThresh,
-                           nonLevel1Var){
+                           ctrlVarsRankedFrameTrans, lowVertThresh, volThresh
+                           ){
 
-  if(newNormVal$WellDefined && ctrlVarName %in% nonLevel1Var == FALSE){
+  if(newNormVal$WellDefined){
     return(newNormVal)
   } else {
+    lowQuantileUnTrans <- sinh(quantile(exprs(ctrlVarsRankedFrameTrans[,1])
+                                        , 0.01, na.rm = TRUE))*transCoFac
+    highQuantileUnTrans <- sinh(quantile(exprs(ctrlVarsRankedFrameTrans[,1])
+                                         , 0.99, na.rm = TRUE))*transCoFac
     #Here, a loop is applied, where the ideal variables are applied in their
     #ranked order, to see if the gating of these markers can enhance the
     #separation.
@@ -222,7 +235,9 @@ bNormCSetupCo2 <- function(newNormVal, ctrlVar, ctrlVarName, transCoFac,
              "PeakDist" = abs(ctrlVarPeaksOptUnTrans[1]-
                                 ctrlVarPeaksOptUnTrans[2]),
              "FilterVar" = colnames(ctrlVarsRankedFrameTrans[,n]),
-             "OptFilter" = optFilter)
+             "OptFilter" = optFilter,
+             "lowQuant" = lowQuantileUnTrans,
+             "highQuant" = highQuantileUnTrans)
 
         wellSep <- TRUE
       }
@@ -239,7 +254,20 @@ bNormCSetupCo2 <- function(newNormVal, ctrlVar, ctrlVarName, transCoFac,
   if(wellSep){
     return(localNormVals)
   } else {
-    return(newNormVal)
+    #Now, we try to return the first and 99th percentile, and normalize to
+    #these in the cases where no well-defined peaks can be found.
+
+    localNormVals <- list("WellDefined" = FALSE,
+                          "LowPeakCtrl" = NA,
+                          "HighPeakCtrl" = NA,
+                          "DensVol" = NA,
+                          "LowVertex" =NA,
+                          "PeakDist" = NA,
+                          "FilterVar" = NA,
+                          "OptFilter" = NA,
+                          "lowQuant" = lowQuantileUnTrans,
+                          "highQuant" = highQuantileUnTrans)
+    return(localNormVals)
   }
 
 }

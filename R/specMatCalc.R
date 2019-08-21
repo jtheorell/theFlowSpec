@@ -1,98 +1,150 @@
 #' Calculating the matrix used for spectral unmixing
 #'
 #'
-#' This algoritm takes the (pre-gated) single-stained controls and negative controls, including an autofluorescence control and estimates the unmixing for all fluorescent variables.
-#' @param compControls A dataframe with two components (and many columns):
-#' \describe{
-#'            \item{Name}{A column that associates each observation with a certain sample}
-#'            \item{Channels}{All the channels detecting fluosrescent information in the file.}
-#'            \item{Negative}{The file number in the compControls list/FlowSet negative for the fluorochrome/marker in question. For autofluorescense subtraction, the value here is set to "NA".}
-#'          }
-#' @param compScheme A dataframe with three columns:
-#' \describe{
-#'            \item{Fluorochrome}{The name of the fluorochrome/marker present in the Name column of the compControls file}
-#'            \item{Positive}{The file number in the compControls list/FlowSet positive for the fluorochrome/marker in question.}
-#'            \item{Negative}{The file number in the compControls list/FlowSet negative for the fluorochrome/marker in question. For autofluorescense subtraction, the value here is set to "NA".}
-#'          }
-#' @param Ids A vector that connects each row in the dataframe with a certain single-stained sample.
-#' @return A data frame with each row representing a fluorochrome and each column representing a detector
+#' This algoritm takes a flowSet containing single-stained controls and
+#' negative controls, including an autofluorescence control and estimates the
+#' unmixing for all fluorescent variables.
+#' @param compControls A flowSet containing all the single stained and
+#' unstained files necessary to create an spectral unmixing matrix.
+#' @param groupNames A character vector containing strings common to the groups
+#' of non-autofluoresence compControls that could be present. If for example
+#' all antibodies single stains are anti-mouse bead-based the dead cell marker
+#' is stained PBMC, and the files congruently either have a prefix containing
+#' "Bead" or "PBMC", then the vector should be c("Bead", "PBMC"). The system
+#' is not case specific.
+#' @param autoFluoName The sample name of the autofluorescence control.
+#' @return A data frame with each row representing a fluorochrome or
+#' or autofluorescence and each column representing a detector.
+#' @importFrom BiocGenerics colnames ncol
 #' @examples
-#' # Load suitable compensation controls. Use the readFlowSetDf function.
-#' # NB! The compensation controls need to be cleaned up, so that doublets do not
-#' # cause any harm.
+#' # Load suitable compensation controls. NB! If these originate from different
+#' #sample types, such as beads and PBMC, there should be a negative control for
+#' #each group and the names should reflect this, so that all PBMC samples would
+#' #be called PBMC_unstained, PBMC_DCM, etc.
 #' data(compCtrls)
-#' 
-#' # Now construct the compScheme file
-#' allControls <- unique(compCtrls$id)
-#' fluorochromes <- allControls[-grep("stained", allControls)]
-#' 
-#' # Now pair each fluorochrome with a positive and a negative sample name.
-#' # NB! The negative sample needs to have exacely the same autofluorescence as the
-#' # stained sample (not ture for the autofluorescence control, that instead needs to have
-#' # the same autofluorescence as the actual samples that will be compensated).
-#' 
-#' Ids <- c(fluorochromes, "Autofluorescence")
-#' PosSamples <- c(fluorochromes, "PBMC_unstained")
-#' NegSamples <- c(rep("Unstained", times = length(fluorochromes)), 0)
-#' compScheme <- cbind(Ids, PosSamples, NegSamples)
-#' 
-#' # Now, select only the fluorescence channels, marked by one of the lasers
-#' compControls <- compCtrls[, grepl("[VBRY]", colnames(compCtrls))]
-#' ids <- compCtrls$id
-#' 
+#'
+#' #If  the dataset contains cell controls, make sure that the cell population
+#' #interest dominates FSC-A, as the data highest peak in this channel will be
+#' #used.
+#'
 #' # And run the function
-#' spectralMatrix <- specMatCalc(compControls, compScheme, ids)
+#' specMat <- specMatCalc(compCtrls, groupNames = "Beads_", autoFluoName =
+#' "PBMC_autofluo.fcs")
 #' @export specMatCalc
-specMatCalc <- function(compControls, compScheme, ids) {
+specMatCalc <- function(compControls, groupNames, autoFluoName) {
 
-    # Now, to save some computational time, the negative samples, that are reused, are first calculated
-    negSamples <- unique(compScheme[, 3])
-    # First, the full dataset is scaled using robust variance scaling
-    # compControlsScaled <- dScale(compControls,center=FALSE,robustVarScale = FALSE)
+    #The spectrum for each file is calculated
 
-    # First, a dummy variable is constructed with the same length as the positive and negative samples for each case
-    # dummy <- lapply(c(1:nrow(compScheme)), function(i) c(rep(1, length(ids[ids==compScheme[i,2]])), if(compScheme[i,3]==0){0} else {rep(0, length(ids[ids==compScheme[i,3]]))}))
+    specCalcMat <- fsApply(compControls, theFlowSpec:::specCalc)
 
-    # compControlList <- lapply(c(1:nrow(compScheme)), function(i) rbind(compControlsScaled[ids==compScheme[i,2],], if(compScheme[i,3]==0){rep(0, ncol(compControls))} else{compControlsScaled[ids==compScheme[i,3],]}))
+    #Now, the samples are categorized into groups depending on their sample
+    #type reflected in the names of the samples. If any samples are singlets,
+    #then they are put to the side. The most likely reason for having one
+    #singlet is that all compensation controls have been acquired with beads,
+    #but that the autofluorescence control is unstained cells.
 
-    # Now, this is used to solve a least squares problem
-    # solution <- lapply(c(1:nrow(compScheme)), function(i) pls(compControlList[[i]], dummy[[i]], ncomp=1)$loadings$X)
-
-    # solution <- lapply(c(1:nrow(compScheme)), function(i) lsfit(compControlList[[i]], dummy[[i]], intercept=FALSE)$coef)
+    singleStainGroupsList <- lapply(groupNames, function(x)
+        return(specCalcMat[which(grepl(x, row.names(specCalcMat))),]))
 
 
-    # solutionFrac <-  lapply(solution, function(x) x/max(x))
-    # solutionMat <- do.call("cbind", solutionFrac)
+    #Now, in each matrix in the list, the row with the lowest sum
+    #is identified as the unstained
+    negCtrlRows <- lapply(singleStainGroupsList,
+                          function(x) which.min(rowSums(x)))
 
-    # colnames(solutionMat) <- compScheme[,1]
+    #If the autoFluoName is not in the
 
+    #Here, the subtractions are made
+    rawSpecMatList <- lapply(seq_along(negCtrlRows), function(x) {
+       localSpecMat <- apply(singleStainGroupsList[[x]], 1, function(y)
+            y-singleStainGroupsList[[x]][negCtrlRows[[x]],])
+    })
 
-    negPeaksList = list()
-    for (i in 1:length(negSamples)) {
-        if (negSamples[i] == "0") {
-            negPeaksList[[i]] <- rep(0, times = ncol(compControls))
-        } else {
-            negSample <- compControls[ids == negSamples[i], ]
-            negPeaksList[[i]] <- apply(negSample, 2, median)
+    #Here, the data is coerced into a matrix
+    rawSpecMat <- do.call("cbind", rawSpecMatList)
+
+    #Now, the unstained controls are removed
+    specMatNoUnstain <- rawSpecMat[,-which(colSums(rawSpecMat) == 0)]
+
+    #Here, the column names are cleaned up.
+    specMatColNamesRaw1 <- colnames(specMatNoUnstain)
+    specMatColNamesRaw2 <- gsub("|\\.fcs","", specMatColNamesRaw1)
+    specMatColNames <- vector()
+    for(i in  specMatColNamesRaw2){
+        for(j in groupNames){
+            if(grepl(j, i)){
+                specMatColNames[i] <- gsub(paste0(j, "|"),"", i)
+            }
         }
-
-    }
-    specMat <- list()
-    for (i in 1:nrow(compScheme)) {
-
-
-        posSample <- compControls[ids == compScheme[i, 2], ]
-        posPeaks <- apply(posSample, 2, median)
-        negPeaks <- negPeaksList[[which(negSamples == compScheme[i, 3])]]
-
-        peaks <- posPeaks - negPeaks
-        peaksFraction <- peaks / max(peaks)
-        specMat[[i]] <- peaksFraction
-
     }
 
-    specDf <- do.call("rbind", specMat)
+    colnames(specMatNoUnstain) <- specMatColNames
 
-    row.names(specDf) <- compScheme[, 1]
-    return(specDf)
+    #Now, the autofluorescence medians are added
+    specMat <- cbind(specMatNoUnstain,
+                       "Autofluo" = specCalcMat[autoFluoName,])
+
+    specMatFrac <- t(apply(specMat, 2, function(x) x/max(x)))
+
+    #And finally, all negative values resulting from minor errors in detection,
+    #are removed.
+    specMatFrac[which(specMatFrac < 0)] <- 0
+
+    return(specMatFrac)
+}
+
+specCalc <- function(flowFrame) {
+    focusColNames <- BiocGenerics::colnames(flowFrame)
+
+    #First, a gate is applied to FSC.A, to simplify work with cells
+    fscVar <- which(grepl("FSC", focusColNames) &
+                        grepl("A", focusColNames))
+
+    fscGatedFrame <- madFilter(flowFrame, gateVar = fscVar, nMads = 1.5)
+    fscFilteredFrame <- filterOut(fscGatedFrame,
+                                  filterName = "FSC-A_auto_filter")[
+                                      , seq(1, BiocGenerics::ncol(flowFrame))]
+
+    #Now, a gate is applied to ssc, to clean up all files.
+    sscVar <- which(grepl("SSC", focusColNames) &
+                      grepl("A", focusColNames))
+
+    sscGatedFrame <- madFilter(fscFilteredFrame, gateVar = sscVar, nMads = 1.5)
+    sscFilteredFrame <- filterOut(sscGatedFrame,
+                                  filterName = "SSC-A_auto_filter")[
+                                      , seq(1, BiocGenerics::ncol(flowFrame))]
+
+    #Here, all non-fluorescent channels are excluded
+    fluoFrame <- sscFilteredFrame[,-which(grepl("ime", focusColNames) |
+                                              grepl("SC", focusColNames))]
+    #Then the median is calculated for all fluorescence channels on this
+    #filtered population
+    fluoColNames <- BiocGenerics::colnames(fluoFrame)
+
+    rawMedVals <- vapply(fluoColNames, function(x)
+        median(exprs(fluoFrame[,x])), 1)
+
+
+    #Now, the highest peak is identified, and the data further gated on this
+    #variable, to reduce the variance further
+    maxMedVar <- which.max(rawMedVals)
+
+    #This channel is now produced separately, to increase computational
+    #speed
+    maxMedVarFrame <- fluoFrame[,maxMedVar]
+
+    #And here, this channel is transformed for the madFilter to work correctly
+    maxMedVarFrameTrans <- arcTrans(maxMedVarFrame,
+                                    transNames = colnames(maxMedVarFrame),
+                                    transCoFacs = 400)
+
+    #Here, the data is gated
+    maxGatedFrame <- madFilter(maxMedVarFrameTrans, gateVar = 1,
+                               nMads = 1.5, returnSepFilter = TRUE)
+    maxFilteredFrame <- fluoFrame[which(maxGatedFrame == 1),]
+
+    #And finally, the median procedure is repeated for this final population
+    resultMedVals <- vapply(fluoColNames, function(x)
+        median(exprs(maxFilteredFrame[,x])), 1)
+
 }

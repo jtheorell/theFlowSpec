@@ -4,12 +4,16 @@
 \alias{turnDerGate}
 \title{Function used to generate automated gates on large sets of samples}
 \usage{
-turnDerGate(inDatDonList, gateMarker, euclidMarkers, lowPeak = TRUE,
-  abovePeak = TRUE, adjust = 2, nDens = "default", volRatio = 0.05,
-  gateWeight = 2, createDir = TRUE)
+turnDerGate(inDatDonList, negDonVec = 0, gateMarker, euclidMarkers,
+  lowPeak = TRUE, abovePeak = TRUE, adjust = 2, nDens = "default",
+  volRatio = 0.05, gateWeight = 2, createDir = TRUE)
 }
 \arguments{
 \item{inDatDonList}{This is the list of donor dataframes that should be gated. Here, all variables should be included, and the specific gating variables are specified below.}
+
+\item{negDonVec}{A numeric vector. If some donors should be left ungated, for example because they
+lack expression of the marker of interest, they should be added here,
+and all cell will be regarded asnegative for the marker.}
 
 \item{gateMarker}{Just like it soounds, this specifies which of the columns in each of the donor dataframes that should be used to create the gates. Can be given as a number or a name.}
 

@@ -4,16 +4,16 @@
 \alias{oneVsAllPlot}
 \title{Plotting all variables against a single variable}
 \usage{
-oneVsAllPlot(flowData, yCol = 1, nRows = 10000, plotName = "default",
-  zeroTrim = TRUE, saveResult = TRUE)
+oneVsAllPlot(flowObj, yCol = "all", nRows = 10000,
+  plotName = "default", zeroTrim = TRUE, saveResult = TRUE)
 }
 \arguments{
-\item{flowData}{This is the full dataset, either a flowFrame or a flowSet,
+\item{flowObj}{This is the full dataset, either a flowFrame or a flowSet,
 that should be plotted. If it has more rows than "nRows", a subsample (with
 equal contributions from each sample if a flowSet) will be plotted.}
 
 \item{yCol}{Here, the variable to be plotted against all the others is
-selected. It can be either a number or the column name of interest.}
+selected. It can be either a number, the column name of interest or "all".}
 
 \item{nRows}{The number of rows that will be used to construct the plot.
 The fewer, the faster, but the resolution also decreases, naturally. Default

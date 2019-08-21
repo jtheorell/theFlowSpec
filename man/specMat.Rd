@@ -9,6 +9,7 @@
 data(specMat)
 }
 \description{
-This matrix is generated using the specMatCalc function and the compCtrls example file.
+This matrix is generated using the specMatCalc function and the compCtrls
+example file.
 }
 \keyword{datasets}

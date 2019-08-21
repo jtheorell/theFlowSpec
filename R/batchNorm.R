@@ -63,9 +63,12 @@ batchNorm <- function(normSet, intCtrlFrame, batchNormCtrlFile,
                                           transCoFacs = transCoFacs,
                                           exclColNmStr = exclColNmStr)
 
-    intCtrlFrameTrans <- arcTrans(flowObj = intCtrlFrame,
-                                  transCoFacs = transCoFacs,
-                                  transNames = normNames)
+    if(logical(transNames) == FALSE ){
+      intCtrlFrameTrans <- arcTrans(flowObj = intCtrlFrame,
+                                    transCoFacs = transCoFacs,
+                                    transNames = normNames)
+    }
+
 
     # Now, the procedure that identified the most clearly separated subsets with
     #the external control file is repeated for the internal control file
@@ -126,9 +129,23 @@ batchNorm <- function(normSet, intCtrlFrame, batchNormCtrlFile,
 batchNormCoFunc1 <- function(batchNormVals, focCtrlFrameTrans, transCoFac,
                              lowVertThresh, volThresh, varName){
 
+  focCtrlFrameTrim <- oneDZeroTrim(focCtrlFrameTrans[,1], trimFrac = 0.1,
+                                   nRowOut = 100000)
+  quantiles <- c("lowQuantile" = quantile(as.vector(exprs(focCtrlFrameTrim[,1])),
+                                          0.01, na.rm = TRUE),
+                 "highQuantile" = quantile(exprs(focCtrlFrameTrim[,1]),
+                                           0.99, na.rm = TRUE))
+  quantilesUnTrans <- sinh(quantiles)*transCoFac
+
     #This function is all in all very similar to the batch norm control setup
     #co-functions, so look there for annotation.
-    if(BiocGenerics:::ncol(focCtrlFrameTrans) == 2){
+    if(batchNormVals$WellDefined){
+      if(BiocGenerics::ncol(focCtrlFrameTrans) == 1){
+        focCtrlPeaks <- peakIdenti(exprs(focCtrlFrameTrim)[,1], nPeaks = 2,
+                                   volThresh = volThresh,
+                                   returnStats = TRUE)
+
+      } else {
         focCtrlTrimPos <- oneDZeroTrim(focCtrlFrameTrans[,2], trimFrac = 0.1,
                                        nRowOut = 100000,
                                        returnFlowFrame = FALSE,
@@ -152,67 +169,36 @@ batchNormCoFunc1 <- function(batchNormVals, focCtrlFrameTrans, transCoFac,
                                      volThresh = volThresh,
                                      returnStats = TRUE)
         } else {
-          focCtrlFrameTrim <- oneDZeroTrim(focCtrlFrameTrans[,1],
-                                           trimFrac = 0.1,
-                                           nRowOut = 100000)
-          focCtrlPeaks <- peakIdenti(exprs(focCtrlFrameTrim)[,1],
-                                     nPeaks = 1,
-                                     volThresh = volThresh,
-                                     returnStats = TRUE)
+          batchNormVals$WellDefined <- FALSE
         }
-    } else {
-      focCtrlFrameTrim <- oneDZeroTrim(focCtrlFrameTrans, trimFrac = 0.1,
-                                     nRowOut = 100000)
-      nPeaks <- ifelse(is.na(batchNormVals$HighPeakCtrl), 1, 2)
+      }
+      if(length(focCtrlPeaks$PeakPos) == 1){
+        batchNormVals$WellDefined <- FALSE
+      }
+    }
 
-      focCtrlPeaks <- peakIdenti(exprs(focCtrlFrameTrim)[,1],
-                               nPeaks = nPeaks,
-                               volThresh = volThresh,
-                               returnStats = TRUE)
-  }
+  # Now, two different methods are used, depending on if two peaks were found
+  # in both files or not.
+  if (batchNormVals$WellDefined) {
 
     intPeaksUnTrans <- sinh(focCtrlPeaks$PeakPos)*transCoFac
-    # Now, two different methods are used, depending on if two peaks were found
-    # in both files or not.
-    if (is.na(batchNormVals$HighPeakCtrl) == FALSE &&
-              length(intPeaksUnTrans) == 2) {
 
-        print(paste0("Done with ", varName))
+    print(paste0("Done with ", varName))
 
-        return(c("IntPeakLow" = intPeaksUnTrans[1],
-                   "IntPeakHigh" = intPeaksUnTrans[2],
-                   "ExtPeakLow" = batchNormVals$LowPeakCtrl,
-                   "ExtPeakHigh" = batchNormVals$HighPeakCtrl))
+    return(c("IntPeakLow" = intPeaksUnTrans[1],
+             "IntPeakHigh" = intPeaksUnTrans[2],
+             "ExtPeakLow" = batchNormVals$LowPeakCtrl,
+             "ExtPeakHigh" = batchNormVals$HighPeakCtrl))
 
-    } else {
-        # In this case, we are writing the function in a slightly convoluted
-        #way, to allow for the situation where there is two values for one of
-        #the control and the sample. If so, the dominant peak are selected,
-        #based on the density volume of the peaks as defined in the peakIdenti
-        #function.
-        if (is.na(batchNormVals$HighPeakCtrl)) {
-            if(length(focCtrlPeaks$PeakPos) == 2){
-                intPeak <- focCtrlPeaks$PeakPos[which.max(focCtrlPeaks$DensVol)]
-                extPeak <- batchNormVals$LowPeakCtrl
-            } else {
-                intPeak <- focCtrlPeaks$PeakPos
-                extPeak <- batchNormVals$LowPeakCtrl
-            }
+  } else {
 
-        } else{
-            intPeak <- focCtrlPeaks$PeakPos
-            extPeak <- unlist(batchNormVals[2:3])[
-                which.max(batchNormVals$DensVol)]
-        }
+      print(paste0("Done with ", varName))
 
-        intPeakUnTrans <- sinh(intPeak)*transCoFac
-
-        print(paste0("Done with ", varName))
-
-        return(c("IntPeak" = intPeakUnTrans,
-                 "ExtPeak" = extPeak))
-
-    }
+      return(c("IntQuantLow" = quantilesUnTrans[1],
+               "IntQuantHigh" = quantilesUnTrans[2],
+               "ExtQuantLow" = batchNormVals$lowQuant,
+               "ExtQuantHigh" = batchNormVals$highQuant))
+  }
 
 }
 

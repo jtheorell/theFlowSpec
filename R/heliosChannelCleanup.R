@@ -1,4 +1,4 @@
-#' @importFrom flowCore parameters 
+#' @importFrom flowCore parameters
 #' @importFrom Biobase pData
 #' @importFrom BiocGenerics colnames
 #' @export heliosChannelCleanup
@@ -39,7 +39,7 @@ heliosChannelCleanup <- function(flowFrameRaw, nonMetalChannels =
     newColNames <- gsub("-", ".", newColNames)
 
     newColNames[which(pDataFFReduced$name %in% nonMetalChannels)] <-
-        nonMetalChannels
+      pDataFFReduced$name[which(pDataFFReduced$name %in% nonMetalChannels)]
 
     pDataFFReduced$oldName <- pDataFFReduced$name
     pDataFFReduced$name <- newColNames

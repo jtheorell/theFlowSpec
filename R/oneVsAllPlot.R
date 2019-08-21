@@ -3,11 +3,11 @@
 #'
 #' This function is useful both when setting appropriate gates and when the
 #' adjustments of the compensation are done
-#' @param flowData This is the full dataset, either a flowFrame or a flowSet,
+#' @param flowObj This is the full dataset, either a flowFrame or a flowSet,
 #' that should be plotted. If it has more rows than "nRows", a subsample (with
 #' equal contributions from each sample if a flowSet) will be plotted.
 #' @param yCol Here, the variable to be plotted against all the others is
-#' selected. It can be either a number or the column name of interest.
+#' selected. It can be either a number, the column name of interest or "all".
 #' @param nRows The number of rows that will be used to construct the plot.
 #' The fewer, the faster, but the resolution also decreases, naturally. Default
 #' is 100000.
@@ -24,12 +24,35 @@
 #' @importFrom reshape2 melt
 #' @importFrom ggplot2 ggplot aes facet_wrap geom_hex xlab ylab theme
 #' element_blank element_line ggsave scale_fill_gradientn
+#' @importFrom BiocParallel bplapply
 #' @export oneVsAllPlot
-oneVsAllPlot <- function(flowData, yCol=1, nRows = 10000, plotName = "default",
+oneVsAllPlot <- function(flowObj, yCol="all", nRows = 10000,
+                         plotName = "default",
                          zeroTrim = TRUE, saveResult = TRUE) {
 
-    plotExprs <- plotDownSample(flowData, nRows)
+    plotExprs <- plotDownSample(flowObj, nRows)
 
+    if(yCol == "all"){
+        dir.create("All_vs_all_plots")
+        bplapply(seq_along(colnames(plotExprs)), function(x) {
+            oneVsAllPlotCoFunction(plotExprs = plotExprs, yCol = x,
+                                   plotName = plotName,
+                                   zeroTrim = zeroTrim,
+                                   saveResult = saveResult,
+                                   dirName = "All_vs_all_plots")
+        })
+    } else {
+        oneVsAllPlotCoFunction(plotExprs = plotExprs, yCol = yCol,
+                               plotName = plotName,
+                               zeroTrim = zeroTrim,
+                               saveResult = saveResult)
+    }
+
+
+}
+
+oneVsAllPlotCoFunction <- function(plotExprs, yCol, plotName, zeroTrim,
+                                   saveResult, dirName = "."){
     # If the yCol is given as a character, it is converted to the correct number
     #here
     if (class(yCol) == "character") {
@@ -37,7 +60,7 @@ oneVsAllPlot <- function(flowData, yCol=1, nRows = 10000, plotName = "default",
     }
 
     if (plotName == "default") {
-        plotName <- colnames(plotExprs)[yCol]
+        plotName <- file.path(dirName, colnames(plotExprs)[yCol])
     }
 
     #Here, a separate y-name is created
@@ -80,5 +103,4 @@ oneVsAllPlot <- function(flowData, yCol=1, nRows = 10000, plotName = "default",
     if(saveResult == TRUE){
         ggsave(paste0(plotName, "_vs_all_others.pdf"))
     }
-
 }

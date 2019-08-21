@@ -4,18 +4,13 @@
 \alias{arcTrans}
 \title{Efficient inverse hyperbolic cosine transformation}
 \usage{
-arcTrans(flowObj, transNames = "default", exclColNmStr = c("ime"),
-  transCoFacs = "default", unTrans = FALSE)
+arcTrans(flowObj, transNames, transCoFacs = "default", unTrans = FALSE)
 }
 \arguments{
 \item{flowObj}{The fcs object to be transformed. Both flowFrames and flowSets
 are accepted.}
 
-\item{transNames}{The variables that should be normalized. Default is all
-that do not fall into the excl category below.}
-
-\item{exclColNmStr}{A vector of strings that are not accepted in the
-transNames.}
+\item{transNames}{The variables that should be normalized.}
 
 \item{transCoFacs}{This vector of values define the values for the
 transformation during the normalization. In the "default" case, the function

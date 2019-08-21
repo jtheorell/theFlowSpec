@@ -1,6 +1,7 @@
 #' Spectral unmixing matrix
 #'
-#' This matrix is generated using the specMatCalc function and the compCtrls example file.
+#' This matrix is generated using the specMatCalc function and the compCtrls
+#' example file.
 #'
 #' @docType data
 #'
